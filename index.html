@@ -13,6 +13,9 @@
 <body>
     <div class="not-dark h-full w-full">
         <button id="reset">Reset</button>
+        <button id="copy-json">Copy JSON</button>
+        <button id="copy-csv">Copy CSV</button>
+        <button id="import-json">Import JSON</button>
 
         <div id="timeline-container"></div>
 
@@ -29,6 +32,7 @@
 
         <div class="p-3" id="table-container"></div>
         <button id="sort">Sort</button>
+
     </div>
 
     <script>
@@ -477,8 +481,26 @@
             render();
         });
 
+        document.getElementById("copy-json").addEventListener("click", () => {
+            navigator.clipboard.writeText(JSON.stringify(appData)).then(function() {
+                console.log('copied');
+            }).catch(function(error) {
+                console.error('failed to copy to clipboard');
+            });
+        })
+
+        document.getElementById("import-json").addEventListener("click", () => {
+            const s = prompt("insert one-line JSON");
+            if (s == null) return;
+            appData = JSON.parse(s);
+            save();
+            render();
+            updateControls();
+        })
+
         // TODO: export to CSV
-        // TODO: save / load from JSON
+        // TODO: indicate successful copy
+        // TODO: styling
         // TODO: donation button
 
         setTimeout(() => {
