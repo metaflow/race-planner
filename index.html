@@ -8,6 +8,17 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
     <title>Interactive Race Planner</title>
+    <style type="text/tailwindcss">
+        /* input {
+            @apply border-black border rounded;
+        } */
+         button {
+            @apply border-black border rounded p-1 m-1 font-normal;
+         }
+         th {
+            @apply font-normal;
+         }
+    </style>
 </head>
 
 <body>
@@ -256,14 +267,25 @@
             tableContainer.innerHTML = ""; // Clear previous content
 
             const table = document.createElement("table");
-            table.classList.add("editable-table");
+            table.classList.add("table-fixed");
 
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["", "", "Color", "Track", "Label", "Marker", "Offset", "Duration", "notes"].forEach((header) => {
+            [
+{label: "", classes: ""},
+{label: "", classes: ""},
+{label: "Color", classes: ""},
+{label: "Track", classes: "max-w"},
+{label: "Label", classes: ""},
+{label: "Marker", classes: ""},
+{label: "Offset", classes: ""},
+{label: "Duration", classes: ""},
+{label: "Notes", classes: ""},
+].forEach((header) => {
                 const th = document.createElement("th");
-                th.textContent = header;
+                th.textContent = header.label;
+                th.className = header.classes;
                 if (header == "Marker") {
                     const btn = document.createElement("button");
                     btn.innerText = "sort";
@@ -277,9 +299,10 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
-            const addCellInput = (row, v, set, type = "text") => {
+            const addCellInput = (row, v, set, type = "text", inputClasses="") => {
                 const td = document.createElement("td");
                 const input = document.createElement("input");
+                input.className = inputClasses;
                 input.type = type;
                 input.value = v;
                 input.addEventListener("input", (e) => {
@@ -329,8 +352,8 @@
                     updateControls();
                     console.log('delete');
                 });
-                addCellInput(row, d.color, (v) => (d.color = v), "color");
-                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number");
+                addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
+                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-8");
                 addCellInput(row, d.label, (v) => (d.label = v));
                 addCellInput(row, d.position, (v) => (d.position = v));
                 addCellInput(row, d.start, (v) => (d.start = v));
