@@ -259,7 +259,7 @@
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["Color", "Track", "Label", "Marker", "Offset", "Duration","Description"].forEach((header) => {
+            ["Color", "Track", "Label", "Marker", "Offset", "Duration", "Description"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
                 headerRow.appendChild(th);
@@ -416,7 +416,24 @@
             updateControls();
         }
 
+        function addPoint() {
+            appData.points.push({
+                "color": "#000000",
+                "position": "0:00",
+                "label": `#${appData.points.length+1}`,
+                "description": "",
+                "start": "",
+                "duration": "",
+                "track": 0
+            });
+            save();
+            render();
+            updateControls();
+        }
+
         document.getElementById("sort").addEventListener("click", sortPoints);
+        document.getElementById("add").addEventListener("click", addPoint);
+
         document.getElementById("race-distance").addEventListener("input", (e) => {
             appData.raceDistance = e.target.value;
             save();
@@ -429,8 +446,6 @@
             render();
         });
 
-        // TODO: add version to app data
-        // TODO: description
         // TODO: add
         // TODO: duplicate
         // TODO: remove
