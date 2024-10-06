@@ -4,18 +4,388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <title>Interactive Race Planner</title>
 </head>
 
 <body>
-    <div id="app">
-        <h1>Welcome to My Project</h1>
-        <p>This is a basic HTML template.</p>
+    <div class="not-dark h-full w-full">
+        <button id="reset">Reset</button>
+
+        <div id="timeline-container"></div>
+
+        <div class="p-4">
+            <div>
+                <label for="race-distance">Distance:</label>
+                <input type="text" id="race-distance"></input>
+            </div>
+            <div>
+                <label for="race-duration">Duration:</label>
+                <input type="text" id="race-duration"></input>
+            </div>
+        </div>
+
+        <div class="p-3" id="table-container"></div>
+        <button id="add">Add</button>
+        <button id="sort">Sort</button>
     </div>
 
     <script>
-        console.log('hello')
+        let data = [];
+        let raceDistance = 10000;
+        let raceDuration = 3600;
+        let appData = {};
+
+        const loadData = () => {
+            let s = localStorage.getItem("race_data");
+            if (s == null)
+                s = `{
+  "raceDistance": 10000,
+  "raceDuration": 3600,
+  "points": [
+    {
+      "label": "Start",
+      "position": "0km",
+      "start": "10min",
+      "duration": "30min",
+      "color": "#ff0000"
+    },
+    {
+      "label": "Water Station 1",
+      "position": "5km",
+      "start": "",
+      "duration": ""
+    },
+    {
+      "label": "Water Station 2",
+      "position": "1h",
+      "start": "",
+      "duration": ""
+    },
+    {
+      "label": "Finish",
+      "position": "10km",
+      "start": "",
+      "duration": ""
+    }
+  ]
+}`;
+            appData = JSON.parse(s);
+            console.log("app data", appData);
+            data = appData.points;
+            raceDistance = appData.raceDistance;
+            raceDuration = appData.raceDuration;
+        };
+
+        const margin = { top: 50, right: 30, bottom: 30, left: 30 };
+        const width = window.innerWidth - margin.left - margin.right;
+        const height = 200 - margin.top - margin.bottom;
+
+        const svg = d3
+            .select("#timeline-container")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleLinear().domain([0, raceDistance]).range([0, width]);
+
+        const timeScale = d3.scaleLinear().domain([0, raceDuration]).range([0, width]);
+
+        function dd(i) {
+            return i.toString().padStart(2, "0");
+        }
+
+        const tooltip = d3
+            .select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("background", "lightsteelblue")
+            .style("padding", "5px")
+            .style("border-radius", "4px");
+
+        let selectedPoint = null; // To keep track of the selected circle
+
+        function save() {
+            localStorage.setItem("race_data", JSON.stringify(appData));
+        }
+
+        function processData() {
+            data.forEach((d) => {
+                const e = parseDistanceOrTime(d.position);
+                d.distance = e.distance;
+                d.time = e.time;
+                d.rangeStart = parseDistanceOrTime(d.start);
+                d.rangeDuration = parseDistanceOrTime(d.duration);
+            });
+            appData.points = data;
+            save();
+        }
+
+        function render() {
+            processData();
+            svg.selectAll("circle").remove();
+            svg.selectAll("text").remove();
+            svg.selectAll("g").remove();
+            svg.selectAll("rect").remove();
+
+            // console.log(JSON.stringify(appData));
+
+            // TODO: extend to ranges
+            x.domain([0, d3.max(data, (d) => d.distance)]).range([0, width]);
+
+            // Periods, before markers to make all markers interactive.
+            svg
+                .selectAll("rect")
+                .data(data.filter((d) => d.rangeDuration.distance > 0))
+                .enter()
+                .append("rect")
+                .attr("x", (d) => x(d.distance + d.rangeStart.distance))
+                .attr("y", height / 2 - 10)
+                .attr("width", (d) => x(d.rangeDuration.distance)) // The width depends on start and end
+                .attr("height", 20) // Height of the rectangle
+                .style("fill", (d) => d.color)
+                .style("opacity", 0.5);
+
+            // Add circles
+            svg
+                .selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", (d) => x(d.distance))
+                .attr("cy", height / 2)
+                .attr("r", 5)
+                .style("fill", (d) => d.color)
+                .on("mouseover", (event, d) => {
+                    tooltip
+                        // TODO: format time
+                        .html(`${d.label}: ${d.distance} km`)
+                        .style("visibility", "visible")
+                        .style("top", event.pageY - 20 + "px")
+                        .style("left", event.pageX + 10 + "px");
+                })
+                .on("mouseout", () => tooltip.style("visibility", "hidden"));
+
+            // Add labels
+            svg
+                .selectAll("text")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("x", (d) => x(d.distance))
+                .attr("y", height / 2 - 10)
+                .attr("text-anchor", "middle")
+                .text((d) => d.label);
+
+            // Distance axis.
+            svg
+                .append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .append("text")
+                .attr("x", width / 2)
+                .attr("y", 30)
+                .attr("text-anchor", "middle")
+                .attr("fill", "black")
+                .text("Distance, m");
+
+            // Time axis.
+            svg
+                .append("g")
+                .attr("transform", `translate(0,0)`)
+                .call(
+                    d3.axisTop(timeScale).tickFormat((d) => {
+                        const m = Math.round(d / 60);
+                        return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
+                    })
+                )
+                .append("text")
+                .attr("x", width / 2)
+                .attr("y", -30)
+                .attr("text-anchor", "middle")
+                .attr("fill", "black")
+                .text("Time, hh:mm");
+        }
+
+        function createEditableTable() {
+            const tableContainer = document.getElementById("table-container");
+            tableContainer.innerHTML = ""; // Clear previous content
+
+            const table = document.createElement("table");
+            table.classList.add("editable-table");
+
+            // Create table header
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            ["Color", "Label", "Marker", "Offset", "Duration"].forEach((header) => {
+                const th = document.createElement("th");
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            // Create table body
+            const tbody = document.createElement("tbody");
+            data.forEach((d, i) => {
+                const row = document.createElement("tr");
+                const addCellInput = (v, set, type = "text") => {
+                    const td = document.createElement("td");
+                    const input = document.createElement("input");
+                    input.type = type;
+                    input.value = v;
+                    input.addEventListener("input", (e) => {
+                        set(e.target.value);
+                        render();
+                    });
+                    td.appendChild(input);
+                    row.appendChild(td);
+                };
+                addCellInput(d.color, (v) => (d.color = v), "color");
+                addCellInput(d.label, (v) => (d.label = v));
+                addCellInput(d.position, (v) => (d.position = v));
+                addCellInput(d.start, (v) => (d.start = v));
+                addCellInput(d.duration, (v) => (d.duration = v));
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+        }
+        const strToMeters = (value, unit) => {
+            const val = parseFloat(value);
+            switch (unit) {
+                case "m":
+                    return val; // meters
+                case "km":
+                    return val * 1000; // kilometers to meters
+                case "mi":
+                    return val * 1609.34; // miles to meters
+                default:
+                    return 0;
+            }
+        };
+
+        function parseDistance(input) {
+            input = input.trim();
+            const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|mi)$/; // Matches distances like "12km", "5mi"
+            let match = input.match(distanceRegex);
+            if (match) {
+                const value = match[1];
+                const unit = match[2];
+                return [strToMeters(value, unit), ""];
+            }
+            return [0, `cannot parse ${input} as distance, format is <number>(m|km|mi)`];
+        }
+
+        function parseTime(input) {
+            input = input.trim();
+            const timeRegex = /^([+-]?\d*\.?\d*) *(s|sec|min|h)|[+-]?(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/; // Matches time like "1.5h", "45min", "01:30"
+
+            // Convert time to seconds
+            const convertTimeToSeconds = (value, unit) => {
+                const val = parseFloat(value);
+                switch (unit) {
+                    case "s":
+                    case "sec":
+                        return val; // seconds
+                    case "min":
+                        return val * 60; // minutes to seconds
+                    case "h":
+                        return val * 3600; // hours to seconds
+                    default:
+                        return 0;
+                }
+            };
+
+            // Convert hh:mm:ss format to seconds.
+            const parseHHMMSS = (hours, minutes, seconds = 0) => {
+                return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+            };
+
+            let match = input.match(timeRegex);
+            if (match) {
+                let sec = 0;
+                if (match[1]) {
+                    // Time in "float h/min/s" format, like "1.5h" or "45min"
+                    const value = match[1];
+                    const unit = match[2];
+                    sec = convertTimeToSeconds(value, unit);
+                } else if (match[3] && match[4]) {
+                    // Time in "hh:mm" or "hh:mm:ss" format
+                    const hours = match[3];
+                    const minutes = match[4];
+                    const seconds = match[5] || 0;
+                    sec = parseHHMMSS(hours, minutes, seconds);
+                    if (input.startsWith("-")) sec *= -1;
+                }
+                return [sec, ""];
+            }
+            return [0, `cannot parse '${input}' as time`];
+        }
+
+        // TODO Report errors
+        function parseDistanceOrTime(input) {
+            // Regex to match the input format: "(+-)\d*(.\d*|:\d\d|:\d\d:\d\d)?(m|km|mi|s|h|min)"
+
+            const timeToDistance = (s) => {
+                return (s / raceDuration) * raceDistance;
+            };
+
+            const distanceToTime = (d) => {
+                return (d / raceDistance) * raceDuration;
+            };
+
+            const [d, err] = parseDistance(input);
+
+            if (err == "") {
+                return { time: distanceToTime(d), distance: d };
+            }
+
+            const [sec, err2] = parseTime(input);
+            if (err2 == "") {
+                return { time: sec, distance: timeToDistance(sec) };
+            }
+
+            return { time: 0, distance: 0 };
+        }
+
+        function sortPoints() {
+            processData();
+            data.sort((a, b) => a.distance - b.distance);
+            createEditableTable();
+        }
+
+        function resetData() {
+            localStorage.removeItem("race_data");
+            loadData();
+            render();
+            createEditableTable();
+        }
+
+        document.getElementById("reset").addEventListener("click", reset);
+        document.getElementById("sort").addEventListener("click", sortPoints);
+
+
+        // TODO: sort button
+        // TODO: race distance and time
+        // TODO: add
+        // TODO: duplicate
+        // TODO: remove
+        // TODO: export to CSV
+        // TODO: save / load from JSON
+        // TODO: donation button
+
+        setTimeout(() => {
+            loadData();
+            render();
+            createEditableTable();
+        }, 0);
     </script>
 </body>
 
