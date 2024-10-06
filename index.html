@@ -38,17 +38,27 @@
 <body class="text-gray-800 bg-slate-100">
     <div class="m-2">
         <h1 class="text-xl">Interactive race nutrition planner</h1>
-        <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
-        <p>Begin by entering the distance and planned duration of the race.</p>
-        <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44 sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
-        <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
-        <p>Move markers up and down with "Track" for better visualization.</p>
+        <div class="flex flex-row justify-between">
+            <div>
+                <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
+                <p>Begin by entering the distance and planned duration of the race.</p>
+                <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44 sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
+                <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
+                <p>Move markers up and down with "Track" for better visualization.</p>
+            </div>
+            <div class="grow-0 ml-4">
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD');kofiwidget2.draw();</script> 
+            </div>
+        </div>
     </div>
     <div class="h-full w-full">
         <button id="reset" title="Delete all rows and load sample data">Reset</button>
         <button id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
         <button id="import-json" title="Import JSON exported from another session">Import JSON</button>
         <button id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
+
+        
+
         <div id="message" class="invisible">messages</div>
 
         <div id="timeline-container" class="w-full"></div>
