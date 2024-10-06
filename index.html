@@ -37,12 +37,21 @@
         let raceDuration = 3600;
         let appData = {};
 
+        function resetData() {
+            localStorage.removeItem("race_data");
+            loadData();
+            render();
+            createEditableTable();
+        }
+
+        document.getElementById("reset").addEventListener("click", resetData);
+
         const loadData = () => {
             let s = localStorage.getItem("race_data");
             if (s == null)
                 s = `{
-  "raceDistance": 10000,
-  "raceDuration": 3600,
+  "raceDistance": "10km",
+  "raceDuration": "1:00:00",
   "points": [
     {
       "label": "Start",
@@ -74,8 +83,8 @@
             appData = JSON.parse(s);
             console.log("app data", appData);
             data = appData.points;
-            raceDistance = appData.raceDistance;
-            raceDuration = appData.raceDuration;
+            document.getElementById("race-distance").value = appData.raceDistance;
+            document.getElementById("race-duration").value = appData.raceDuration;
         };
 
         const margin = { top: 50, right: 30, bottom: 30, left: 30 };
@@ -108,13 +117,24 @@
             .style("padding", "5px")
             .style("border-radius", "4px");
 
-        let selectedPoint = null; // To keep track of the selected circle
-
         function save() {
-            localStorage.setItem("race_data", JSON.stringify(appData));
+            const s = JSON.stringify(appData);
+            console.log('saving', appData);
+            localStorage.setItem("race_data", s);
         }
 
         function processData() {
+            let err = '';
+            [raceDistance, err] = parseDistance(appData.raceDistance);
+            if (err != '') {
+                raceDistance = 1000;
+                console.error(err);
+            }
+            [raceDuration, err] = parseTime(appData.raceDuration);
+            if (err != '') {
+                raceDuration = 100;
+                console.error(err);
+            }
             data.forEach((d) => {
                 const e = parseDistanceOrTime(d.position);
                 d.distance = e.distance;
@@ -123,6 +143,8 @@
                 d.rangeDuration = parseDistanceOrTime(d.duration);
             });
             appData.points = data;
+            console.log('data', data);
+            console.log('race', raceDistance, 'm', raceDuration, 's');
             save();
         }
 
@@ -135,9 +157,9 @@
 
             // console.log(JSON.stringify(appData));
 
-            // TODO: extend to ranges
-            x.domain([0, d3.max(data, (d) => d.distance)]).range([0, width]);
-
+            // TODO: take ranges and min into account
+            x.domain([0, Math.max(raceDistance, d3.max(data, (d) => d.distance))]).range([0, width]);
+            timeScale.domain([0, Math.max(raceDuration, d3.max(data, (d) => d.time))]).range([0, width]);
             // Periods, before markers to make all markers interactive.
             svg
                 .selectAll("rect")
@@ -272,7 +294,7 @@
         };
 
         function parseDistance(input) {
-            input = input.trim();
+            input = input.toString().trim();
             const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|mi)$/; // Matches distances like "12km", "5mi"
             let match = input.match(distanceRegex);
             if (match) {
@@ -284,7 +306,7 @@
         }
 
         function parseTime(input) {
-            input = input.trim();
+            input = input.toString().trim();
             const timeRegex = /^([+-]?\d*\.?\d*) *(s|sec|min|h)|[+-]?(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/; // Matches time like "1.5h", "45min", "01:30"
 
             // Convert time to seconds
@@ -312,12 +334,12 @@
             if (match) {
                 let sec = 0;
                 if (match[1]) {
-                    // Time in "float h/min/s" format, like "1.5h" or "45min"
+                    // Time in "float h/min/s" format, like "1.5h" or "45min".
                     const value = match[1];
                     const unit = match[2];
                     sec = convertTimeToSeconds(value, unit);
                 } else if (match[3] && match[4]) {
-                    // Time in "hh:mm" or "hh:mm:ss" format
+                    // Time in "hh:mm" or "hh:mm:ss" format.
                     const hours = match[3];
                     const minutes = match[4];
                     const seconds = match[5] || 0;
@@ -361,18 +383,17 @@
             createEditableTable();
         }
 
-        function resetData() {
-            localStorage.removeItem("race_data");
-            loadData();
-            render();
-            createEditableTable();
-        }
-
-        document.getElementById("reset").addEventListener("click", reset);
         document.getElementById("sort").addEventListener("click", sortPoints);
+        document.getElementById("race-distance").addEventListener("input", (e) => {
+            appData.raceDistance = e.target.value;
+            render();
+        });
 
+        document.getElementById("race-duration").addEventListener("input", (e) => {
+            appData.raceDuration = e.target.value;
+            render();
+        });
 
-        // TODO: sort button
         // TODO: race distance and time
         // TODO: add
         // TODO: duplicate
