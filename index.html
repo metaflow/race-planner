@@ -16,6 +16,7 @@
         <button id="copy-json">Copy JSON</button>
         <button id="copy-csv">Copy CSV</button>
         <button id="import-json">Import JSON</button>
+        <div id="message" class="invisible">messages</div>
 
         <div id="timeline-container"></div>
 
@@ -31,7 +32,6 @@
         </div>
 
         <div class="p-3" id="table-container"></div>
-        <button id="sort">Sort</button>
     </div>
 
     <script>
@@ -264,6 +264,12 @@
             ["", "", "Color", "Track", "Label", "Marker", "Offset", "Duration", "notes"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
+                if (header == "Marker") {
+                    const btn = document.createElement("button");
+                    btn.innerText = "sort";
+                    btn.addEventListener("click", sortPoints);
+                    th.appendChild(btn);
+                }
                 headerRow.appendChild(th);
             });
             thead.appendChild(headerRow);
@@ -466,8 +472,6 @@
             updateControls();
         }
 
-        document.getElementById("sort").addEventListener("click", sortPoints);
-
         document.getElementById("race-distance").addEventListener("input", (e) => {
             appData.raceDistance = e.target.value;
             save();
@@ -482,9 +486,9 @@
 
         document.getElementById("copy-json").addEventListener("click", () => {
             navigator.clipboard.writeText(JSON.stringify(appData)).then(function () {
-                console.log('copied');
+                showMessage('Copied JSON to clipboard', 'text-green-600', 3000);
             }).catch(function (error) {
-                console.error('failed to copy to clipboard');
+                showError('failed to copy to clipboard');
             });
         });
 
@@ -541,14 +545,29 @@
         document.getElementById("copy-csv").addEventListener("click", () => {
             const s = toCSV();
             navigator.clipboard.writeText(s).then(function () {
-                console.log('copied');
+                showMessage('Copied CSV to clipboard', 'text-green-600', 3000);
             }).catch(function (error) {
-                console.error('failed to copy to clipboard');
+                showError('failed to copy to clipboard');
             });
-        })
+        });
 
-        // TODO: indicate successful copy
+        function showError(err) {
+            showMessage(err, 'text-red-600');
+        }
+
+        function showMessage(content, classes, timeout=null) {
+            const m = document.getElementById('message');
+            m.className = classes;
+            m.innerText = content;
+            if (timeout != null) {
+                setTimeout(() => {
+                    m.className = 'invisible';
+                }, timeout)
+            }
+        }
+
         // TODO: move sort button to the Marker column
+        // TODO: pace
         // TODO: styling
         // TODO: donation button
 
