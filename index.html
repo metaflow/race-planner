@@ -5,40 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'selector',
+          theme: {
+            extend: {
+            }
+          }
+        }
+      </script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
     <title>Interactive Race Planner</title>
     <style type="text/tailwindcss">
-        /* input {
-            @apply border-black border rounded;
-        } */
          button {
-            @apply border-black border rounded p-1 m-1 font-normal;
+            @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
          }
          th {
             @apply font-normal;
          }
+         textarea {
+            height: 34px;
+            @apply p-1;
+            margin-top: 1px;
+         }
+         input, textarea {
+            @apply border-gray-300 border rounded;
+         }
     </style>
 </head>
 
-<body>
-    <div class="not-dark h-full w-full">
-        <button id="reset">Reset</button>
-        <button id="copy-json">Copy JSON</button>
-        <button id="copy-csv">Copy CSV</button>
-        <button id="import-json">Import JSON</button>
+<body class="text-gray-800 bg-slate-100">
+    <div class="m-2">
+        <h1 class="text-xl">Interactive race nutrition planner</h1>
+        <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
+        <p>Begin by entering the distance and planned duration of the race.</p>
+        <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44 sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
+        <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
+        <p>Move markers up and down with "Track" for better visualization.</p>
+    </div>
+    <div class="h-full w-full p-1">
+        <button id="reset" title="Delete all rows and load sample data">Reset</button>
+        <button id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
+        <button id="import-json" title="Import JSON exported from another session">Import JSON</button>
+        <button id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
         <div id="message" class="invisible">messages</div>
 
         <div id="timeline-container"></div>
 
         <div class="p-4">
-            <div>
-                <label for="race-distance">Distance:</label>
-                <input type="text" id="race-distance"></input>
+            <div class="m-1">
+                <label for="race-distance" class="inline-block w-20">Distance</label>
+                <input type="text" id="race-distance" class="border p-1 w-20"></input>
             </div>
-            <div>
-                <label for="race-duration">Duration:</label>
-                <input type="text" id="race-duration"></input>
+            <div class="m-1">
+                <label for="race-duration"class="inline-block w-20">Duration</label>
+                <input type="text" id="race-duration" class="border p-1 w-20"></input>
             </div>
         </div>
 
@@ -60,46 +82,7 @@
         const loadData = () => {
             let s = localStorage.getItem("race_data");
             if (s == null)
-                s = `{
-  "formatVersion": "1",
-  "raceDistance": "10km",
-  "raceDuration": "1:00:00",
-  "points": [
-    {
-      "label": "Start",
-      "position": "0km",
-      "start": "10min",
-      "duration": "30min",
-      "color": "#ff0000",
-      "track": 2,
-      "notes": ""
-    },
-    {
-      "label": "Water Station 1",
-      "position": "5km",
-      "start": "",
-      "duration": "",
-      "track": 2,
-      "notes": ""
-    },
-    {
-      "label": "Water Station 2",
-      "position": "1h",
-      "start": "",
-      "duration": "",
-      "track": 2,
-      "notes": ""
-    },
-    {
-      "label": "Finish",
-      "position": "10km",
-      "start": "",
-      "duration": "",
-      "track": 2,
-      "notes": ""
-    }
-  ]
-}`;
+                s = `{"formatVersion":"1","raceDistance":"21.1km","raceDuration":"2:30:00","points":[{"label":"Start","position":"0km","start":"","duration":"","color":"#d7284b","track":1,"notes":""},{"color":"#6f4e37","position":"0:10","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"10km","track":3},{"label":"Aid 1 💧","position":"5km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Aid 2 💧","position":"10km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"color":"#6f4e37","position":"1:20","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"10km","track":3},{"label":"Aid 3 💧🍌","position":"15km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Finish","position":"21.1km","start":"","duration":"","track":1,"notes":"You did it!","color":"#ff0000"}]}`;
             appData = JSON.parse(s);
         };
 
@@ -267,7 +250,7 @@
             tableContainer.innerHTML = ""; // Clear previous content
 
             const table = document.createElement("table");
-            table.classList.add("table-fixed");
+            table.className = "table-auto";
 
             // Create table header
             const thead = document.createElement("thead");
@@ -276,7 +259,7 @@
 {label: "", classes: ""},
 {label: "", classes: ""},
 {label: "Color", classes: ""},
-{label: "Track", classes: "max-w"},
+{label: "Track", classes: ""},
 {label: "Label", classes: ""},
 {label: "Marker", classes: ""},
 {label: "Offset", classes: ""},
@@ -286,9 +269,13 @@
                 const th = document.createElement("th");
                 th.textContent = header.label;
                 th.className = header.classes;
-                if (header == "Marker") {
+                if (header.label == "Marker") {
                     const btn = document.createElement("button");
-                    btn.innerText = "sort";
+                    btn.innerHTML = `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 20V10m0 10-3-3m3 3 3-3m5-13v10m0-10 3 3m-3-3-3 3"/>
+</svg>`;
+                    btn.title = "Sort rows"
+                    btn.className = "border-0 p-0 m-0 align-bottom"
                     btn.addEventListener("click", sortPoints);
                     th.appendChild(btn);
                 }
@@ -299,10 +286,10 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
-            const addCellInput = (row, v, set, type = "text", inputClasses="") => {
+            const addCellInput = (row, v, set, type = "text", inputClassName="") => {
                 const td = document.createElement("td");
                 const input = document.createElement("input");
-                input.className = inputClasses;
+                input.className = inputClassName;
                 input.type = type;
                 input.value = v;
                 input.addEventListener("input", (e) => {
@@ -313,11 +300,11 @@
                 td.appendChild(input);
                 row.appendChild(td);
             };
-            const addCellTextArea = (row, v, set, type = "text") => {
+            const addCellTextArea = (row, v, set, className = "") => {
                 const td = document.createElement("td");
                 const input = document.createElement("textarea");
-                input.type = type;
                 input.value = v;
+                input.className = className;
                 input.addEventListener("input", (e) => {
                     set(e.target.value);
                     save();
@@ -326,10 +313,11 @@
                 td.appendChild(input);
                 row.appendChild(td);
             };
-            const addCellButton = (row, label, click) => {
+            const addCellButton = (row, label, tooltip, click) => {
                 const td = document.createElement("td");
                 const btn = document.createElement("button");
-                btn.innerText = label;
+                btn.title = tooltip;
+                btn.innerHTML = label;
                 btn.addEventListener("click", click);
                 td.appendChild(btn);
                 row.appendChild(td);
@@ -338,14 +326,19 @@
             appData.points.forEach((d, i) => {
                 const row = document.createElement("tr");
 
-                addCellButton(row, "dup", () => {
+                addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"/>
+</svg>
+`, "duplicate", () => {
                     appData.points.push({ ...d });
                     save();
                     render();
                     updateControls();
                     console.log('copy');
                 });
-                addCellButton(row, "del", () => {
+                addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+</svg>`, "delete", () => {
                     appData.points.splice(i, 1);
                     save();
                     render();
@@ -353,17 +346,19 @@
                     console.log('delete');
                 });
                 addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
-                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-8");
-                addCellInput(row, d.label, (v) => (d.label = v));
-                addCellInput(row, d.position, (v) => (d.position = v));
-                addCellInput(row, d.start, (v) => (d.start = v));
-                addCellInput(row, d.duration, (v) => (d.duration = v));
-                addCellTextArea(row, d.notes, (v) => (d.notes = v));
+                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-11 border p-1");
+                addCellInput(row, d.label, (v) => (d.label = v), "text", "border p-1");
+                addCellInput(row, d.position, (v) => (d.position = v), "text", "border p-1 w-20");
+                addCellInput(row, d.start, (v) => (d.start = v), "text", "border p-1 w-20");
+                addCellInput(row, d.duration, (v) => (d.duration = v), "text", "border p-1 w-20");
+                addCellTextArea(row, d.notes, (v) => (d.notes = v), "border");
                 tbody.appendChild(row);
             });
 
             const row = document.createElement("tr");
-            addCellButton(row, "add", () => {
+            addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
+</svg>`, "add new", () => {
                 addPoint();
                 save();
                 render();
@@ -589,10 +584,9 @@
             }
         }
 
-        // TODO: move sort button to the Marker column
         // TODO: pace
-        // TODO: styling
         // TODO: donation button
+        // TODO: start / end of interval in tooltip
 
         setTimeout(() => {
             loadData();
