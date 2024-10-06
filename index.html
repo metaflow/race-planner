@@ -44,14 +44,14 @@
         <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
         <p>Move markers up and down with "Track" for better visualization.</p>
     </div>
-    <div class="h-full w-full p-1">
+    <div class="h-full w-full">
         <button id="reset" title="Delete all rows and load sample data">Reset</button>
         <button id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
         <button id="import-json" title="Import JSON exported from another session">Import JSON</button>
         <button id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
         <div id="message" class="invisible">messages</div>
 
-        <div id="timeline-container"></div>
+        <div id="timeline-container" class="w-full"></div>
 
         <div class="p-4">
             <div class="m-1">
@@ -87,14 +87,11 @@
         };
 
         const margin = { top: 50, right: 100, bottom: 30, left: 30 };
-        const width = window.innerWidth - margin.left - margin.right;
-        const height = 200 - margin.top - margin.bottom;
+        
 
         const svg = d3
             .select("#timeline-container")
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -154,6 +151,15 @@
         }
 
         function render() {
+            // -20px for scroll.
+            const width = document.getElementById('timeline-container').clientWidth - margin.left - margin.right - 20;
+            const height = 200 - margin.top - margin.bottom;
+            d3
+                .select("#timeline-container")
+                .select('svg')
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom);
+
             svg.selectAll("circle").remove();
             svg.selectAll("text").remove();
             svg.selectAll("g").remove();
@@ -351,7 +357,7 @@
                 addCellInput(row, d.position, (v) => (d.position = v), "text", "border p-1 w-20");
                 addCellInput(row, d.start, (v) => (d.start = v), "text", "border p-1 w-20");
                 addCellInput(row, d.duration, (v) => (d.duration = v), "text", "border p-1 w-20");
-                addCellTextArea(row, d.notes, (v) => (d.notes = v), "border");
+                addCellTextArea(row, d.notes, (v) => (d.notes = v), "border w-72");
                 tbody.appendChild(row);
             });
 
@@ -593,6 +599,8 @@
             render();
             updateControls();
         }, 0);
+
+        window.addEventListener('resize', _.throttle(render, 500));
     </script>
 </body>
 
