@@ -48,6 +48,7 @@
             let s = localStorage.getItem("race_data");
             if (s == null)
                 s = `{
+  "formatVersion": "1",
   "raceDistance": "10km",
   "raceDuration": "1:00:00",
   "points": [
@@ -57,28 +58,32 @@
       "start": "10min",
       "duration": "30min",
       "color": "#ff0000",
-      "track": 0
+      "track": 0,
+      "description": ""
     },
     {
       "label": "Water Station 1",
       "position": "5km",
       "start": "",
       "duration": "",
-      "track": 0
+      "track": 0,
+      "description": ""
     },
     {
       "label": "Water Station 2",
       "position": "1h",
       "start": "",
       "duration": "",
-      "track": 0
+      "track": 0,
+      "description": ""
     },
     {
       "label": "Finish",
       "position": "10km",
       "start": "",
       "duration": "",
-      "track": 0
+      "track": 0,
+      "description": ""
     }
   ]
 }`;
@@ -183,7 +188,18 @@
                 .style("fill", (d) => d.color)
                 .style("opacity", 0.5);
 
-            // Add circles
+            // Add labels
+            svg
+                .selectAll("text")
+                .data(data)
+                .enter()
+                .append("text")
+                .attr("x", (d) => xScale(d.distance) + 10)
+                .attr("y", (d) => height / 2 + d.track * trackHeight + 6)
+                .attr("text-anchor", "left")
+                .text((d) => d.label);
+
+            // Markers - created last to make an interactive tooltip.
             svg
                 .selectAll("circle")
                 .data(data)
@@ -196,23 +212,12 @@
                 .on("mouseover", (event, d) => {
                     tooltip
                         // TODO: format time
-                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}`)
+                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.description}`)
                         .style("visibility", "visible")
                         .style("top", event.pageY - 20 + "px")
                         .style("left", event.pageX + 10 + "px");
                 })
                 .on("mouseout", () => tooltip.style("visibility", "hidden"));
-
-            // Add labels
-            svg
-                .selectAll("text")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("x", (d) => xScale(d.distance) + 10)
-                .attr("y", (d) => height / 2 + d.track * trackHeight + 6)
-                .attr("text-anchor", "left")
-                .text((d) => d.label);
 
             // Distance axis.
             svg
@@ -254,7 +259,7 @@
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["Color", "Track", "Label", "Marker", "Offset", "Duration"].forEach((header) => {
+            ["Color", "Track", "Label", "Marker", "Offset", "Duration","Description"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
                 headerRow.appendChild(th);
@@ -279,12 +284,26 @@
                     td.appendChild(input);
                     row.appendChild(td);
                 };
+                const addCellTextArea = (v, set, type = "text") => {
+                    const td = document.createElement("td");
+                    const input = document.createElement("textarea");
+                    input.type = type;
+                    input.value = v;
+                    input.addEventListener("input", (e) => {
+                        set(e.target.value);
+                        save();
+                        render();
+                    });
+                    td.appendChild(input);
+                    row.appendChild(td);
+                };
                 addCellInput(d.color, (v) => (d.color = v), "color");
                 addCellInput(d.track, (v) => (d.track = _.clamp(parseInt(v), -2, 2)), "number");
                 addCellInput(d.label, (v) => (d.label = v));
                 addCellInput(d.position, (v) => (d.position = v));
                 addCellInput(d.start, (v) => (d.start = v));
                 addCellInput(d.duration, (v) => (d.duration = v));
+                addCellTextArea(d.description, (v) => (d.description = v));
                 tbody.appendChild(row);
             });
 
@@ -410,8 +429,8 @@
             render();
         });
 
-        // TODO: store only user inputs in app data
         // TODO: add version to app data
+        // TODO: description
         // TODO: add
         // TODO: duplicate
         // TODO: remove
