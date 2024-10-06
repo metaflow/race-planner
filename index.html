@@ -32,7 +32,6 @@
 
         <div class="p-3" id="table-container"></div>
         <button id="sort">Sort</button>
-
     </div>
 
     <script>
@@ -62,7 +61,7 @@
       "duration": "30min",
       "color": "#ff0000",
       "track": 2,
-      "description": ""
+      "notes": ""
     },
     {
       "label": "Water Station 1",
@@ -70,7 +69,7 @@
       "start": "",
       "duration": "",
       "track": 2,
-      "description": ""
+      "notes": ""
     },
     {
       "label": "Water Station 2",
@@ -78,7 +77,7 @@
       "start": "",
       "duration": "",
       "track": 2,
-      "description": ""
+      "notes": ""
     },
     {
       "label": "Finish",
@@ -86,7 +85,7 @@
       "start": "",
       "duration": "",
       "track": 2,
-      "description": ""
+      "notes": ""
     }
   ]
 }`;
@@ -215,7 +214,7 @@
                 .on("mouseover", (event, d) => {
                     tooltip
                         // TODO: format time
-                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.description}`)
+                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.notes}`)
                         .style("visibility", "visible")
                         .style("top", event.pageY - 20 + "px")
                         .style("left", event.pageX + 10 + "px");
@@ -262,7 +261,7 @@
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["", "", "Color", "Track", "Label", "Marker", "Offset", "Duration", "Description"].forEach((header) => {
+            ["", "", "Color", "Track", "Label", "Marker", "Offset", "Duration", "notes"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
                 headerRow.appendChild(th);
@@ -326,21 +325,21 @@
                 });
                 addCellInput(row, d.color, (v) => (d.color = v), "color");
                 addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number");
-                addCellInput(row,d.label, (v) => (d.label = v));
-                addCellInput(row,d.position, (v) => (d.position = v));
-                addCellInput(row,d.start, (v) => (d.start = v));
-                addCellInput(row,d.duration, (v) => (d.duration = v));
-                addCellTextArea(row, d.description, (v) => (d.description = v));
+                addCellInput(row, d.label, (v) => (d.label = v));
+                addCellInput(row, d.position, (v) => (d.position = v));
+                addCellInput(row, d.start, (v) => (d.start = v));
+                addCellInput(row, d.duration, (v) => (d.duration = v));
+                addCellTextArea(row, d.notes, (v) => (d.notes = v));
                 tbody.appendChild(row);
             });
 
             const row = document.createElement("tr");
             addCellButton(row, "add", () => {
-                    addPoint();
-                    save();
-                    render();
-                    updateControls();
-                });
+                addPoint();
+                save();
+                render();
+                updateControls();
+            });
             tbody.appendChild(row);
 
             table.appendChild(tbody);
@@ -457,7 +456,7 @@
                 "color": "#000000",
                 "position": "0:00",
                 "label": `#${appData.points.length + 1}`,
-                "description": "",
+                "notes": "",
                 "start": "",
                 "duration": "",
                 "track": 0
@@ -482,12 +481,12 @@
         });
 
         document.getElementById("copy-json").addEventListener("click", () => {
-            navigator.clipboard.writeText(JSON.stringify(appData)).then(function() {
+            navigator.clipboard.writeText(JSON.stringify(appData)).then(function () {
                 console.log('copied');
-            }).catch(function(error) {
+            }).catch(function (error) {
                 console.error('failed to copy to clipboard');
             });
-        })
+        });
 
         document.getElementById("import-json").addEventListener("click", () => {
             const s = prompt("insert one-line JSON");
@@ -496,10 +495,60 @@
             save();
             render();
             updateControls();
+        });
+
+
+        function maybeEscapeCSVString(s) {
+            let value = String(s || '');
+            if (/[",\n]/.test(value)) {
+                value = `"${value.replace(/"/g, '""')}"`;
+            }
+            return value;
+        }
+
+        function toCSV() {
+            const headers = [
+                { label: 'Label', value: 'label' },
+                { label: 'Position', value: 'position'},
+                { label: 'Position seconds', value: 'time'},
+                { label: 'Position meters', value: 'distance'},
+                { label: 'Offset', value: 'start' },
+                { label: 'Offset seconds', value: 'range_start_time' },
+                { label: 'Offset meters', value: 'range_start_distance' },
+                { label: 'Duration', value: 'duration' },
+                { label: 'Duration seconds', value: 'range_duration_time' },
+                { label: 'Duration meters', value: 'range_duration_distance' },
+                { label: 'Notes', value: 'notes' },
+            ];
+            const data = markers();
+            // Use lodash to map the points array and append metadata
+            const rows = data.map((d) => {
+                return { ...d,
+                    'range_start_time': _.round(d.rangeStart.time),
+                    'range_start_distance': _.round(d.rangeStart.distance),
+                    'range_duration_time': _.round(d.rangeDuration.time),
+                    'range_duration_distance': _.round(d.rangeDuration.distance),
+                 };
+            });
+            // Generate the CSV string
+            const csvRows = [
+                headers.map(h => h.label),
+                ...rows.map(row => headers.map(h => maybeEscapeCSVString(row[h.value] || '')).join(','))
+            ];
+            return csvRows.join('\n');
+        }
+
+        document.getElementById("copy-csv").addEventListener("click", () => {
+            const s = toCSV();
+            navigator.clipboard.writeText(s).then(function () {
+                console.log('copied');
+            }).catch(function (error) {
+                console.error('failed to copy to clipboard');
+            });
         })
 
-        // TODO: export to CSV
         // TODO: indicate successful copy
+        // TODO: move sort button to the Marker column
         // TODO: styling
         // TODO: donation button
 
