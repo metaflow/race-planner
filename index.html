@@ -28,7 +28,6 @@
         </div>
 
         <div class="p-3" id="table-container"></div>
-        <button id="add">Add</button>
         <button id="sort">Sort</button>
     </div>
 
@@ -58,7 +57,7 @@
       "start": "10min",
       "duration": "30min",
       "color": "#ff0000",
-      "track": 0,
+      "track": 2,
       "description": ""
     },
     {
@@ -66,7 +65,7 @@
       "position": "5km",
       "start": "",
       "duration": "",
-      "track": 0,
+      "track": 2,
       "description": ""
     },
     {
@@ -74,7 +73,7 @@
       "position": "1h",
       "start": "",
       "duration": "",
-      "track": 0,
+      "track": 2,
       "description": ""
     },
     {
@@ -82,7 +81,7 @@
       "position": "10km",
       "start": "",
       "duration": "",
-      "track": 0,
+      "track": 2,
       "description": ""
     }
   ]
@@ -182,7 +181,7 @@
                 .enter()
                 .append("rect")
                 .attr("x", (d) => xScale(d.distance + d.rangeStart.distance))
-                .attr("y", (d) => height / 2 + (d.track - 0.5) * trackHeight)
+                .attr("y", (d) => height / 2 + (d.track - 2 - 0.5) * trackHeight)
                 .attr("width", (d) => xScale(d.rangeDuration.distance)) // The width depends on start and end
                 .attr("height", trackHeight) // Height of the rectangle
                 .style("fill", (d) => d.color)
@@ -195,7 +194,7 @@
                 .enter()
                 .append("text")
                 .attr("x", (d) => xScale(d.distance) + 10)
-                .attr("y", (d) => height / 2 + d.track * trackHeight + 6)
+                .attr("y", (d) => height / 2 + (d.track - 2) * trackHeight + 6)
                 .attr("text-anchor", "left")
                 .text((d) => d.label);
 
@@ -206,7 +205,7 @@
                 .enter()
                 .append("circle")
                 .attr("cx", (d) => xScale(d.distance))
-                .attr("cy", (d) => height / 2 + d.track * trackHeight)
+                .attr("cy", (d) => height / 2 + (d.track - 2) * trackHeight)
                 .attr("r", 5)
                 .style("fill", (d) => d.color)
                 .on("mouseover", (event, d) => {
@@ -259,7 +258,7 @@
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["Color", "Track", "Label", "Marker", "Offset", "Duration", "Description"].forEach((header) => {
+            ["", "", "Color", "Track", "Label", "Marker", "Offset", "Duration", "Description"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
                 headerRow.appendChild(th);
@@ -269,43 +268,76 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
+            const addCellInput = (row, v, set, type = "text") => {
+                const td = document.createElement("td");
+                const input = document.createElement("input");
+                input.type = type;
+                input.value = v;
+                input.addEventListener("input", (e) => {
+                    set(e.target.value);
+                    save();
+                    render();
+                });
+                td.appendChild(input);
+                row.appendChild(td);
+            };
+            const addCellTextArea = (row, v, set, type = "text") => {
+                const td = document.createElement("td");
+                const input = document.createElement("textarea");
+                input.type = type;
+                input.value = v;
+                input.addEventListener("input", (e) => {
+                    set(e.target.value);
+                    save();
+                    render();
+                });
+                td.appendChild(input);
+                row.appendChild(td);
+            };
+            const addCellButton = (row, label, click) => {
+                const td = document.createElement("td");
+                const btn = document.createElement("button");
+                btn.innerText = label;
+                btn.addEventListener("click", click);
+                td.appendChild(btn);
+                row.appendChild(td);
+            };
+
             appData.points.forEach((d, i) => {
                 const row = document.createElement("tr");
-                const addCellInput = (v, set, type = "text") => {
-                    const td = document.createElement("td");
-                    const input = document.createElement("input");
-                    input.type = type;
-                    input.value = v;
-                    input.addEventListener("input", (e) => {
-                        set(e.target.value);
-                        save();
-                        render();
-                    });
-                    td.appendChild(input);
-                    row.appendChild(td);
-                };
-                const addCellTextArea = (v, set, type = "text") => {
-                    const td = document.createElement("td");
-                    const input = document.createElement("textarea");
-                    input.type = type;
-                    input.value = v;
-                    input.addEventListener("input", (e) => {
-                        set(e.target.value);
-                        save();
-                        render();
-                    });
-                    td.appendChild(input);
-                    row.appendChild(td);
-                };
-                addCellInput(d.color, (v) => (d.color = v), "color");
-                addCellInput(d.track, (v) => (d.track = _.clamp(parseInt(v), -2, 2)), "number");
-                addCellInput(d.label, (v) => (d.label = v));
-                addCellInput(d.position, (v) => (d.position = v));
-                addCellInput(d.start, (v) => (d.start = v));
-                addCellInput(d.duration, (v) => (d.duration = v));
-                addCellTextArea(d.description, (v) => (d.description = v));
+
+                addCellButton(row, "dup", () => {
+                    appData.points.push({ ...d });
+                    save();
+                    render();
+                    updateControls();
+                    console.log('copy');
+                });
+                addCellButton(row, "del", () => {
+                    appData.points.splice(i, 1);
+                    save();
+                    render();
+                    updateControls();
+                    console.log('delete');
+                });
+                addCellInput(row, d.color, (v) => (d.color = v), "color");
+                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number");
+                addCellInput(row,d.label, (v) => (d.label = v));
+                addCellInput(row,d.position, (v) => (d.position = v));
+                addCellInput(row,d.start, (v) => (d.start = v));
+                addCellInput(row,d.duration, (v) => (d.duration = v));
+                addCellTextArea(row, d.description, (v) => (d.description = v));
                 tbody.appendChild(row);
             });
+
+            const row = document.createElement("tr");
+            addCellButton(row, "add", () => {
+                    addPoint();
+                    save();
+                    render();
+                    updateControls();
+                });
+            tbody.appendChild(row);
 
             table.appendChild(tbody);
             tableContainer.appendChild(table);
@@ -420,7 +452,7 @@
             appData.points.push({
                 "color": "#000000",
                 "position": "0:00",
-                "label": `#${appData.points.length+1}`,
+                "label": `#${appData.points.length + 1}`,
                 "description": "",
                 "start": "",
                 "duration": "",
@@ -432,7 +464,6 @@
         }
 
         document.getElementById("sort").addEventListener("click", sortPoints);
-        document.getElementById("add").addEventListener("click", addPoint);
 
         document.getElementById("race-distance").addEventListener("input", (e) => {
             appData.raceDistance = e.target.value;
@@ -446,9 +477,6 @@
             render();
         });
 
-        // TODO: add
-        // TODO: duplicate
-        // TODO: remove
         // TODO: export to CSV
         // TODO: save / load from JSON
         // TODO: donation button
