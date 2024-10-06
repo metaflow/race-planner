@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
     <title>Interactive Race Planner</title>
 </head>
 
@@ -32,16 +33,13 @@
     </div>
 
     <script>
-        let data = [];
-        let raceDistance = 10000;
-        let raceDuration = 3600;
         let appData = {};
 
         function resetData() {
             localStorage.removeItem("race_data");
             loadData();
             render();
-            createEditableTable();
+            updateControls();
         }
 
         document.getElementById("reset").addEventListener("click", resetData);
@@ -58,36 +56,36 @@
       "position": "0km",
       "start": "10min",
       "duration": "30min",
-      "color": "#ff0000"
+      "color": "#ff0000",
+      "track": 0
     },
     {
       "label": "Water Station 1",
       "position": "5km",
       "start": "",
-      "duration": ""
+      "duration": "",
+      "track": 0
     },
     {
       "label": "Water Station 2",
       "position": "1h",
       "start": "",
-      "duration": ""
+      "duration": "",
+      "track": 0
     },
     {
       "label": "Finish",
       "position": "10km",
       "start": "",
-      "duration": ""
+      "duration": "",
+      "track": 0
     }
   ]
 }`;
             appData = JSON.parse(s);
-            console.log("app data", appData);
-            data = appData.points;
-            document.getElementById("race-distance").value = appData.raceDistance;
-            document.getElementById("race-duration").value = appData.raceDuration;
         };
 
-        const margin = { top: 50, right: 30, bottom: 30, left: 30 };
+        const margin = { top: 50, right: 100, bottom: 30, left: 30 };
         const width = window.innerWidth - margin.left - margin.right;
         const height = 200 - margin.top - margin.bottom;
 
@@ -98,10 +96,6 @@
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`);
-
-        const x = d3.scaleLinear().domain([0, raceDistance]).range([0, width]);
-
-        const timeScale = d3.scaleLinear().domain([0, raceDuration]).range([0, width]);
 
         function dd(i) {
             return i.toString().padStart(2, "0");
@@ -123,53 +117,69 @@
             localStorage.setItem("race_data", s);
         }
 
-        function processData() {
-            let err = '';
-            [raceDistance, err] = parseDistance(appData.raceDistance);
+        function raceDistance() {
+            const [d, err] = parseDistance(appData.raceDistance);
             if (err != '') {
-                raceDistance = 1000;
+                d = 1000;
                 console.error(err);
             }
-            [raceDuration, err] = parseTime(appData.raceDuration);
+            return d;
+        }
+
+        function raceDuration() {
+            const [d, err] = parseTime(appData.raceDuration);
             if (err != '') {
-                raceDuration = 100;
+                d = 100;
                 console.error(err);
             }
-            data.forEach((d) => {
+            return d;
+        }
+
+        function formatHHMM(sec) {
+            const m = Math.round(sec / 60);
+            return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
+        }
+
+        function markers() {
+            return appData.points.map((s) => {
+                d = { ...s };
                 const e = parseDistanceOrTime(d.position);
                 d.distance = e.distance;
                 d.time = e.time;
                 d.rangeStart = parseDistanceOrTime(d.start);
                 d.rangeDuration = parseDistanceOrTime(d.duration);
-            });
-            appData.points = data;
-            console.log('data', data);
-            console.log('race', raceDistance, 'm', raceDuration, 's');
-            save();
+                return d;
+            })
         }
 
         function render() {
-            processData();
             svg.selectAll("circle").remove();
             svg.selectAll("text").remove();
             svg.selectAll("g").remove();
             svg.selectAll("rect").remove();
+            const data = markers();
+            console.log('markers', data);
 
-            // console.log(JSON.stringify(appData));
+            // Scales will be updated in `render()` based on current data.
+            const xScale = d3.scaleLinear()
+                .domain([0, Math.max(raceDistance(), d3.max(data, (d) => d.distance))])
+                .range([0, width]);
+            const timeScale = d3.scaleLinear()
+                .domain([0, Math.max(raceDuration(), d3.max(data, (d) => d.time))])
+                .range([0, width]);
 
-            // TODO: take ranges and min into account
-            x.domain([0, Math.max(raceDistance, d3.max(data, (d) => d.distance))]).range([0, width]);
-            timeScale.domain([0, Math.max(raceDuration, d3.max(data, (d) => d.time))]).range([0, width]);
+            const trackHeight = 20;
+
             // Periods, before markers to make all markers interactive.
             svg
                 .selectAll("rect")
                 .data(data.filter((d) => d.rangeDuration.distance > 0))
                 .enter()
                 .append("rect")
-                .attr("x", (d) => x(d.distance + d.rangeStart.distance))
-                .attr("y", height / 2 - 10)
-                .attr("width", (d) => x(d.rangeDuration.distance)) // The width depends on start and end
-                .attr("height", 20) // Height of the rectangle
+                .attr("x", (d) => xScale(d.distance + d.rangeStart.distance))
+                .attr("y", (d) => height / 2 + (d.track - 0.5) * trackHeight)
+                .attr("width", (d) => xScale(d.rangeDuration.distance)) // The width depends on start and end
+                .attr("height", trackHeight) // Height of the rectangle
                 .style("fill", (d) => d.color)
                 .style("opacity", 0.5);
 
@@ -179,14 +189,14 @@
                 .data(data)
                 .enter()
                 .append("circle")
-                .attr("cx", (d) => x(d.distance))
-                .attr("cy", height / 2)
+                .attr("cx", (d) => xScale(d.distance))
+                .attr("cy", (d) => height / 2 + d.track * trackHeight)
                 .attr("r", 5)
                 .style("fill", (d) => d.color)
                 .on("mouseover", (event, d) => {
                     tooltip
                         // TODO: format time
-                        .html(`${d.label}: ${d.distance} km`)
+                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}`)
                         .style("visibility", "visible")
                         .style("top", event.pageY - 20 + "px")
                         .style("left", event.pageX + 10 + "px");
@@ -199,16 +209,16 @@
                 .data(data)
                 .enter()
                 .append("text")
-                .attr("x", (d) => x(d.distance))
-                .attr("y", height / 2 - 10)
-                .attr("text-anchor", "middle")
+                .attr("x", (d) => xScale(d.distance) + 10)
+                .attr("y", (d) => height / 2 + d.track * trackHeight + 6)
+                .attr("text-anchor", "left")
                 .text((d) => d.label);
 
             // Distance axis.
             svg
                 .append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
+                .call(d3.axisBottom(xScale))
                 .append("text")
                 .attr("x", width / 2)
                 .attr("y", 30)
@@ -221,10 +231,7 @@
                 .append("g")
                 .attr("transform", `translate(0,0)`)
                 .call(
-                    d3.axisTop(timeScale).tickFormat((d) => {
-                        const m = Math.round(d / 60);
-                        return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
-                    })
+                    d3.axisTop(timeScale).tickFormat((d) => formatHHMM(d))
                 )
                 .append("text")
                 .attr("x", width / 2)
@@ -234,7 +241,10 @@
                 .text("Time, hh:mm");
         }
 
-        function createEditableTable() {
+        function updateControls() {
+            document.getElementById("race-distance").value = appData.raceDistance;
+            document.getElementById("race-duration").value = appData.raceDuration;
+
             const tableContainer = document.getElementById("table-container");
             tableContainer.innerHTML = ""; // Clear previous content
 
@@ -244,7 +254,7 @@
             // Create table header
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
-            ["Color", "Label", "Marker", "Offset", "Duration"].forEach((header) => {
+            ["Color", "Track", "Label", "Marker", "Offset", "Duration"].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header;
                 headerRow.appendChild(th);
@@ -254,7 +264,7 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
-            data.forEach((d, i) => {
+            appData.points.forEach((d, i) => {
                 const row = document.createElement("tr");
                 const addCellInput = (v, set, type = "text") => {
                     const td = document.createElement("td");
@@ -263,12 +273,14 @@
                     input.value = v;
                     input.addEventListener("input", (e) => {
                         set(e.target.value);
+                        save();
                         render();
                     });
                     td.appendChild(input);
                     row.appendChild(td);
                 };
                 addCellInput(d.color, (v) => (d.color = v), "color");
+                addCellInput(d.track, (v) => (d.track = _.clamp(parseInt(v), -2, 2)), "number");
                 addCellInput(d.label, (v) => (d.label = v));
                 addCellInput(d.position, (v) => (d.position = v));
                 addCellInput(d.start, (v) => (d.start = v));
@@ -356,11 +368,11 @@
             // Regex to match the input format: "(+-)\d*(.\d*|:\d\d|:\d\d:\d\d)?(m|km|mi|s|h|min)"
 
             const timeToDistance = (s) => {
-                return (s / raceDuration) * raceDistance;
+                return (s / raceDuration()) * raceDistance();
             };
 
             const distanceToTime = (d) => {
-                return (d / raceDistance) * raceDuration;
+                return (d / raceDistance()) * raceDuration();
             };
 
             const [d, err] = parseDistance(input);
@@ -378,23 +390,28 @@
         }
 
         function sortPoints() {
-            processData();
-            data.sort((a, b) => a.distance - b.distance);
-            createEditableTable();
+            appData.points.sort((a, b) =>
+                parseDistanceOrTime(a.position).distance - parseDistanceOrTime(b.position).distance
+            );
+            save();
+            updateControls();
         }
 
         document.getElementById("sort").addEventListener("click", sortPoints);
         document.getElementById("race-distance").addEventListener("input", (e) => {
             appData.raceDistance = e.target.value;
+            save();
             render();
         });
 
         document.getElementById("race-duration").addEventListener("input", (e) => {
             appData.raceDuration = e.target.value;
+            save();
             render();
         });
 
-        // TODO: race distance and time
+        // TODO: store only user inputs in app data
+        // TODO: add version to app data
         // TODO: add
         // TODO: duplicate
         // TODO: remove
@@ -405,7 +422,7 @@
         setTimeout(() => {
             loadData();
             render();
-            createEditableTable();
+            updateControls();
         }, 0);
     </script>
 </body>
