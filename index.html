@@ -8,10 +8,6 @@
     <script>
         tailwind.config = {
             darkMode: 'selector',
-            theme: {
-                extend: {
-                }
-            }
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
@@ -36,9 +32,10 @@
 </head>
 
 <body class="text-gray-800 bg-slate-100">
-    <div class="m-2">
+    <div class="m-2 mb-0">
         <div class="flex flex-row justify-between">
             <h1 class="text-xl">Interactive race nutrition planner</h1>
+            <button id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show instructions</button>
             <div class="grow-0 ml-4">
                 <span>By Mikhail Goncharov, 2024</span>
                 <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
@@ -47,29 +44,25 @@
             </div>
         </div>
 
-        <div>
+        <div id="instructions" class="hidden mb-2">
             <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
             <p>Begin by entering the distance and planned duration of the race.</p>
-            <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance
-                include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44
-                sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
+            <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance: "100 m", "3.4 km", "2 mi".</p>
+            <p>For time and duration, acceptable values are: "4min", "1.5 h", "-44 sec", "1:15" (1 hour and 15 minutes) or "2:13:09".</p>
             <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful
                 for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
-            <p>Move markers up and down with "Track" for better visualization.</p>
+            <p>Move markers up and down with "Track" to separate them visually.</p>
+            <button class="ml-0" onclick="toggleInstructions(false)">Hide instructions</button>
         </div>
 
     </div>
     </div>
     <div class="h-full w-full">
-        <button id="reset" title="Delete all rows and load sample data">Reset</button>
-        <button id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
-        <button id="import-json" title="Import JSON exported from another session">Import JSON</button>
-        <button id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
-
-
-
+        <button class="mt-0 ml-2" id="reset" title="Delete all rows and load sample data">Reset</button>
+        <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
+        <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
+        <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
         <div id="message" class="invisible">messages</div>
-
         <div id="timeline-container" class="w-full"></div>
 
         <div class="p-4">
@@ -610,7 +603,17 @@
             }
         }
 
-        // TODO: pace        
+        function toggleInstructions(show) {
+            document.getElementById('instructions').classList.toggle("hidden", !show);
+            document.getElementById('show-instructions').classList.toggle("hidden", show);
+            if (show) {
+                localStorage.removeItem('hide-instructions');
+            } else {
+                localStorage.setItem('hide-instructions', 'hide');
+            }
+        }
+
+        // TODO: pace
         // TODO: start / end of interval in tooltip
         // TODO: name and contact info, panel next to the title
         // TODO: Hide instructions button
@@ -620,6 +623,7 @@
             loadData();
             render();
             updateControls();
+            toggleInstructions(localStorage.getItem('hide-instructions') == null);
         }, 0);
 
         window.addEventListener('resize', _.throttle(render, 500));
