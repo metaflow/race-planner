@@ -67,7 +67,7 @@
     <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
     <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
     <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
-    <div id="message" class="invisible p-2">messages</div>
+    <div id="message" class="invisible ml-2">messages</div>
     <div id="timeline-container" class="w-full"></div>
 
     <div class="p-4 flex flex-row items-center">
@@ -107,7 +107,7 @@
       appData = JSON.parse(s);
     };
 
-    const margin = { top: 50, right: 100, bottom: 35, left: 30 };
+    const margin = { top: 50, right: 50, bottom: 35, left: 30 };
 
     const svg = d3
       .select("#timeline-container")
@@ -131,7 +131,6 @@
 
     function save() {
       const s = JSON.stringify(appData);
-      console.log('saving', appData);
       localStorage.setItem("race_data", s);
     }
 
@@ -370,7 +369,6 @@
           appData.points.push({ ...d });
           onDataUpdated();
           updateControls();
-          console.log('copy');
         });
         addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
@@ -378,7 +376,6 @@
           appData.points.splice(i, 1);
           onDataUpdated();
           updateControls();
-          console.log('delete');
         });
         addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
         addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-11 border p-1");
@@ -409,6 +406,7 @@
         case "m":
           return val; // meters
         case "km":
+        case "k":
           return val * 1000; // kilometers to meters
         case "mi":
           return val * 1609.34; // miles to meters
@@ -420,7 +418,7 @@
     function parseDistance(input) {
       input = input.toString().trim();
       if (input === "") return 0;
-      const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|mi)$/; // Matches distances like "12km", "5mi"
+      const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|k|mi)$/; // Matches distances like "12km", "5mi"
       let match = input.match(distanceRegex);
       if (match) {
         const value = match[1];
