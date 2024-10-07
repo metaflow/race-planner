@@ -8,17 +8,17 @@
     <script>
         tailwind.config = {
             darkMode: 'selector',
-          theme: {
-            extend: {
+            theme: {
+                extend: {
+                }
             }
-          }
         }
-      </script>
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
     <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
     <title>Interactive Race Planner</title>
     <style type="text/tailwindcss">
-         button {
+        button {
             @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
          }
          th {
@@ -37,19 +37,28 @@
 
 <body class="text-gray-800 bg-slate-100">
     <div class="m-2">
-        <h1 class="text-xl">Interactive race nutrition planner</h1>
         <div class="flex flex-row justify-between">
-            <div>
-                <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
-                <p>Begin by entering the distance and planned duration of the race.</p>
-                <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44 sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
-                <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
-                <p>Move markers up and down with "Track" for better visualization.</p>
-            </div>
+            <h1 class="text-xl">Interactive race nutrition planner</h1>
             <div class="grow-0 ml-4">
-                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD');kofiwidget2.draw();</script> 
+                <span>By Mikhail Goncharov, 2024</span>
+                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+                <script
+                    type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD'); kofiwidget2.draw();</script>
             </div>
         </div>
+
+        <div>
+            <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
+            <p>Begin by entering the distance and planned duration of the race.</p>
+            <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance
+                include: "100 m", "3.4 km", "2 mi". For time and duration, acceptable values are: "4 min", "1.5 h", "-44
+                sec", "1:15" (1 hour and 30 minutes) or "2:13:00".</p>
+            <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful
+                for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
+            <p>Move markers up and down with "Track" for better visualization.</p>
+        </div>
+
+    </div>
     </div>
     <div class="h-full w-full">
         <button id="reset" title="Delete all rows and load sample data">Reset</button>
@@ -57,7 +66,7 @@
         <button id="import-json" title="Import JSON exported from another session">Import JSON</button>
         <button id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
 
-        
+
 
         <div id="message" class="invisible">messages</div>
 
@@ -69,7 +78,7 @@
                 <input type="text" id="race-distance" class="border p-1 w-20"></input>
             </div>
             <div class="m-1">
-                <label for="race-duration"class="inline-block w-20">Duration</label>
+                <label for="race-duration" class="inline-block w-20">Duration</label>
                 <input type="text" id="race-duration" class="border p-1 w-20"></input>
             </div>
         </div>
@@ -97,7 +106,7 @@
         };
 
         const margin = { top: 50, right: 100, bottom: 30, left: 30 };
-        
+
 
         const svg = d3
             .select("#timeline-container")
@@ -272,16 +281,16 @@
             const thead = document.createElement("thead");
             const headerRow = document.createElement("tr");
             [
-{label: "", classes: ""},
-{label: "", classes: ""},
-{label: "Color", classes: ""},
-{label: "Track", classes: ""},
-{label: "Label", classes: ""},
-{label: "Marker", classes: ""},
-{label: "Offset", classes: ""},
-{label: "Duration", classes: ""},
-{label: "Notes", classes: ""},
-].forEach((header) => {
+                { label: "", classes: "" },
+                { label: "", classes: "" },
+                { label: "Color", classes: "" },
+                { label: "Track", classes: "" },
+                { label: "Label", classes: "" },
+                { label: "Marker", classes: "" },
+                { label: "Offset", classes: "" },
+                { label: "Duration", classes: "" },
+                { label: "Notes", classes: "" },
+            ].forEach((header) => {
                 const th = document.createElement("th");
                 th.textContent = header.label;
                 th.className = header.classes;
@@ -302,7 +311,7 @@
 
             // Create table body
             const tbody = document.createElement("tbody");
-            const addCellInput = (row, v, set, type = "text", inputClassName="") => {
+            const addCellInput = (row, v, set, type = "text", inputClassName = "") => {
                 const td = document.createElement("td");
                 const input = document.createElement("input");
                 input.className = inputClassName;
@@ -547,9 +556,9 @@
         function toCSV() {
             const headers = [
                 { label: 'Label', value: 'label' },
-                { label: 'Position', value: 'position'},
-                { label: 'Position seconds', value: 'time'},
-                { label: 'Position meters', value: 'distance'},
+                { label: 'Position', value: 'position' },
+                { label: 'Position seconds', value: 'time' },
+                { label: 'Position meters', value: 'distance' },
                 { label: 'Offset', value: 'start' },
                 { label: 'Offset seconds', value: 'range_start_time' },
                 { label: 'Offset meters', value: 'range_start_distance' },
@@ -561,12 +570,13 @@
             const data = markers();
             // Use lodash to map the points array and append metadata
             const rows = data.map((d) => {
-                return { ...d,
+                return {
+                    ...d,
                     'range_start_time': _.round(d.rangeStart.time),
                     'range_start_distance': _.round(d.rangeStart.distance),
                     'range_duration_time': _.round(d.rangeDuration.time),
                     'range_duration_distance': _.round(d.rangeDuration.distance),
-                 };
+                };
             });
             // Generate the CSV string
             const csvRows = [
@@ -589,7 +599,7 @@
             showMessage(err, 'text-red-600');
         }
 
-        function showMessage(content, classes, timeout=null) {
+        function showMessage(content, classes, timeout = null) {
             const m = document.getElementById('message');
             m.className = classes;
             m.innerText = content;
