@@ -232,7 +232,7 @@
             }
             s += `<br/>${formatHHMM(d.time)} `;
             if (d.rangeDuration.distance > 0) {
-              s += ` [${formatHHMM(d.rangeStart.time)}..${formatHHMM(d.rangeDuration.time)}]`;
+              s += ` [${formatHHMM(d.time + d.rangeStart.time)}..${formatHHMM(d.time + d.rangeDuration.time)}]`;
             }
             if (d.notes) s += `<br/>${d.notes}`;
             tooltip
