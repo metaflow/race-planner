@@ -2,19 +2,19 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'selector',
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
-    <title>Interactive Race Planner</title>
-    <style type="text/tailwindcss">
-        button {
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'selector',
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
+  <title>Interactive Race Planner</title>
+  <style type="text/tailwindcss">
+    button {
             @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
          }
          th {
@@ -32,602 +32,601 @@
 </head>
 
 <body class="text-gray-800 bg-slate-100">
-    <div class="m-2 mb-0">
-        <div class="flex flex-row justify-between">
-            <h1 class="text-xl">Interactive race nutrition planner</h1>
-            <button id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show instructions</button>
-            <div class="grow-0 ml-4">
-                <span>By Mikhail Goncharov, 2024</span>
-                <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
-                <script
-                    type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD'); kofiwidget2.draw();</script>
-            </div>
-        </div>
-
-        <div id="instructions" class="hidden mb-2">
-            <p>Create and visualize aid stations and plan your nutrition strategy for your next race.</p>
-            <p>Begin by entering the distance and planned duration of the race.</p>
-            <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance: "100 m", "3.4 km", "2 mi".</p>
-            <p>For time and duration, acceptable values are: "4min", "1.5 h", "-44 sec", "1:15" (1 hour and 15 minutes) or "2:13:09".</p>
-            <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful
-                for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
-            <p>Move markers up and down with "Track" to separate them visually.</p>
-            <button class="ml-0" onclick="toggleInstructions(false)">Hide instructions</button>
-        </div>
-
-    </div>
-    </div>
-    <div class="h-full w-full">
-        <button class="mt-0 ml-2" id="reset" title="Delete all rows and load sample data">Reset</button>
-        <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
-        <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
-        <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
-        <div id="message" class="invisible">messages</div>
-        <div id="timeline-container" class="w-full"></div>
-
-        <div class="p-4">
-            <div class="m-1">
-                <label for="race-distance" class="inline-block w-20">Distance</label>
-                <input type="text" id="race-distance" class="border p-1 w-20"></input>
-            </div>
-            <div class="m-1">
-                <label for="race-duration" class="inline-block w-20">Duration</label>
-                <input type="text" id="race-duration" class="border p-1 w-20"></input>
-            </div>
-        </div>
-
-        <div class="p-3" id="table-container"></div>
+  <div class="m-2 mb-0">
+    <div class="flex flex-row justify-between">
+      <h1 class="text-2xl">Interactive race nutrition planner</h1>
+      <button id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show instructions</button>
+      <div class="grow-0 ml-4">
+        <span class="pr-2">
+          By <a class="underline" href="https://github.com/metaflow" target="_blank">Mikhail Goncharov</a>,
+          2024
+        </span>
+        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+        <script
+          type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD'); kofiwidget2.draw();</script>
+      </div>
     </div>
 
-    <script>
-        let appData = {};
+    <div id="instructions" class="hidden mb-2">
+      <p>Create and visualize aid stations and plan your fueling strategy for the next race.</p>
+      <p>Begin by entering the distance and planned duration of the race.</p>
+      <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance: "100
+        m", "3.4 km", "2 mi".</p>
+      <p>For time and duration, acceptable values are: "4min", "1.5 h", "-44 sec", "1:15" (1 hour and 15 minutes),
+        or "2:13:09".</p>
+      <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful
+        for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
+      <p>Move markers up and down with "Track" to separate them visually.</p>
+      <button class="ml-0" onclick="toggleInstructions(false)">Hide instructions</button>
+    </div>
 
-        function resetData() {
-            localStorage.removeItem("race_data");
-            loadData();
-            render();
-            updateControls();
-        }
+  </div>
+  </div>
+  <div class="h-full w-full">
+    <button class="mt-0 ml-2" id="reset" title="Delete all rows and load sample data">Reset</button>
+    <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
+    <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
+    <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
+    <div id="message" class="invisible p-2">messages</div>
+    <div id="timeline-container" class="w-full"></div>
 
-        document.getElementById("reset").addEventListener("click", resetData);
+    <div class="p-4 flex flex-row items-center">
+      <div class="mr-4">
+        <label for="race-distance" class="inline-block">Distance</label>
+        <input type="text" id="race-distance" class="border p-1 w-20"></input>
+      </div>
+      <div>
+        <label for="race-duration" class="inline-block">Duration</label>
+        <input type="text" id="race-duration" class="border p-1 w-20"></input>
+      </div>
+    </div>
 
-        const loadData = () => {
-            let s = localStorage.getItem("race_data");
-            if (s == null)
-                s = `{"formatVersion":"1","raceDistance":"21.1km","raceDuration":"2:30:00","points":[{"label":"Start","position":"0km","start":"","duration":"","color":"#d7284b","track":1,"notes":""},{"color":"#6f4e37","position":"0:10","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"10km","track":3},{"label":"Aid 1 💧","position":"5km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Aid 2 💧","position":"10km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"color":"#6f4e37","position":"1:20","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"8km","track":3},{"label":"Aid 3 💧🍌","position":"15km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Finish","position":"21.1km","start":"","duration":"","track":1,"notes":"You did it!","color":"#ff0000"}]}`;
-            appData = JSON.parse(s);
-        };
+    <div class="p-3" id="table-container"></div>
+  </div>
 
-        const margin = { top: 50, right: 100, bottom: 30, left: 30 };
+  <script>
+    let appData = {};
 
+    function resetData() {
+      localStorage.removeItem("race_data");
+      loadData();
+      render();
+      updateControls();
+    }
 
-        const svg = d3
-            .select("#timeline-container")
-            .append("svg")
-            .append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+    document.getElementById("reset").addEventListener("click", resetData);
 
-        function dd(i) {
-            return i.toString().padStart(2, "0");
-        }
+    const loadData = () => {
+      let s = localStorage.getItem("race_data");
+      if (s == null)
+        s = `{"formatVersion":"1","raceDistance":"21.1km","raceDuration":"2:30:00","points":[{"label":"Start","position":"0km","start":"","duration":"","color":"#d7284b","track":1,"notes":""},{"color":"#6f4e37","position":"0:10","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"10km","track":3},{"label":"Aid 1 💧","position":"5km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Aid 2 💧","position":"10km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"color":"#6f4e37","position":"1:20","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"8km","track":3},{"label":"Aid 3 💧🍌","position":"15km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Finish","position":"21.1km","start":"","duration":"","track":1,"notes":"You did it!","color":"#ff0000"}]}`;
+      appData = JSON.parse(s);
+    };
 
-        const tooltip = d3
-            .select("body")
-            .append("div")
-            .attr("class", "tooltip")
-            .style("position", "absolute")
-            .style("visibility", "hidden")
-            .style("background", "lightsteelblue")
-            .style("padding", "5px")
-            .style("border-radius", "4px");
+    const margin = { top: 50, right: 100, bottom: 30, left: 30 };
 
-        function save() {
-            const s = JSON.stringify(appData);
-            console.log('saving', appData);
-            localStorage.setItem("race_data", s);
-        }
+    const svg = d3
+      .select("#timeline-container")
+      .append("svg")
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-        function raceDistance() {
-            const [d, err] = parseDistance(appData.raceDistance);
-            if (err != '') {
-                d = 1000;
-                console.error(err);
-            }
-            return d;
-        }
+    function dd(i) {
+      return i.toString().padStart(2, "0");
+    }
 
-        function raceDuration() {
-            const [d, err] = parseTime(appData.raceDuration);
-            if (err != '') {
-                d = 100;
-                console.error(err);
-            }
-            return d;
-        }
+    const tooltip = d3
+      .select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background", "lightsteelblue")
+      .style("padding", "5px")
+      .style("border-radius", "4px");
 
-        function formatHHMM(sec) {
-            const m = Math.round(sec / 60);
-            return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
-        }
+    function save() {
+      const s = JSON.stringify(appData);
+      console.log('saving', appData);
+      localStorage.setItem("race_data", s);
+    }
 
-        function markers() {
-            return appData.points.map((s) => {
-                d = { ...s };
-                const e = parseDistanceOrTime(d.position);
-                d.distance = e.distance;
-                d.time = e.time;
-                d.rangeStart = parseDistanceOrTime(d.start);
-                d.rangeDuration = parseDistanceOrTime(d.duration);
-                return d;
-            })
-        }
+    function raceDistance() {
+      return parseDistance(appData.raceDistance);
+    }
 
-        function render() {
-            // -20px for scroll.
-            const width = document.getElementById('timeline-container').clientWidth - margin.left - margin.right - 20;
-            const height = 200 - margin.top - margin.bottom;
-            d3
-                .select("#timeline-container")
-                .select('svg')
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom);
+    function raceDuration() {
+      return parseTime(appData.raceDuration);
+    }
 
-            svg.selectAll("circle").remove();
-            svg.selectAll("text").remove();
-            svg.selectAll("g").remove();
-            svg.selectAll("rect").remove();
-            const data = markers();
-            console.log('markers', data);
+    function formatHHMM(sec) {
+      const m = Math.round(sec / 60);
+      return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
+    }
 
-            // Scales will be updated in `render()` based on current data.
-            const xScale = d3.scaleLinear()
-                .domain([0, Math.max(raceDistance(), d3.max(data, (d) => d.distance))])
-                .range([0, width]);
-            const timeScale = d3.scaleLinear()
-                .domain([0, Math.max(raceDuration(), d3.max(data, (d) => d.time))])
-                .range([0, width]);
+    function markers() {
+      return appData.points.map((s) => {
+        d = { ...s };
+        const e = parseDistanceOrTime(d.position);
+        d.distance = e.distance;
+        d.time = e.time;
+        d.rangeStart = parseDistanceOrTime(d.start);
+        d.rangeDuration = parseDistanceOrTime(d.duration);
+        return d;
+      })
+    }
 
-            const trackHeight = 20;
+    function render() {
+      try {
+        // -20px for scroll.
+        const width = document.getElementById('timeline-container').clientWidth - margin.left - margin.right - 20;
+        const height = 200 - margin.top - margin.bottom;
+        d3
+          .select("#timeline-container")
+          .select('svg')
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom);
 
-            // Periods, before markers to make all markers interactive.
-            svg
-                .selectAll("rect")
-                .data(data.filter((d) => d.rangeDuration.distance > 0))
-                .enter()
-                .append("rect")
-                .attr("x", (d) => xScale(d.distance + d.rangeStart.distance))
-                .attr("y", (d) => height / 2 + (d.track - 2 - 0.5) * trackHeight)
-                .attr("width", (d) => xScale(d.rangeDuration.distance)) // The width depends on start and end
-                .attr("height", trackHeight) // Height of the rectangle
-                .style("fill", (d) => d.color)
-                .style("opacity", 0.5);
+        svg.selectAll("circle").remove();
+        svg.selectAll("text").remove();
+        svg.selectAll("g").remove();
+        svg.selectAll("rect").remove();
+        const data = markers();
 
-            // Add labels
-            svg
-                .selectAll("text")
-                .data(data)
-                .enter()
-                .append("text")
-                .attr("x", (d) => xScale(d.distance) + 10)
-                .attr("y", (d) => height / 2 + (d.track - 2) * trackHeight + 6)
-                .attr("text-anchor", "left")
-                .text((d) => d.label);
+        // Scales will be updated in `render()` based on current data.
+        const xScale = d3.scaleLinear()
+          .domain([0, Math.max(raceDistance(), d3.max(data, (d) => d.distance))])
+          .range([0, width]);
+        const timeScale = d3.scaleLinear()
+          .domain([0, Math.max(raceDuration(), d3.max(data, (d) => d.time))])
+          .range([0, width]);
 
-            // Markers - created last to make an interactive tooltip.
-            svg
-                .selectAll("circle")
-                .data(data)
-                .enter()
-                .append("circle")
-                .attr("cx", (d) => xScale(d.distance))
-                .attr("cy", (d) => height / 2 + (d.track - 2) * trackHeight)
-                .attr("r", 5)
-                .style("fill", (d) => d.color)
-                .on("mouseover", (event, d) => {
-                    tooltip
-                        // TODO: format time
-                        .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.notes}`)
-                        .style("visibility", "visible")
-                        .style("top", event.pageY - 20 + "px")
-                        .style("left", event.pageX + 10 + "px");
-                })
-                .on("mouseout", () => tooltip.style("visibility", "hidden"));
+        const trackHeight = 20;
 
-            // Distance axis.
-            svg
-                .append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(xScale))
-                .append("text")
-                .attr("x", width / 2)
-                .attr("y", 30)
-                .attr("text-anchor", "middle")
-                .attr("fill", "black")
-                .text("Distance, m");
+        // Periods, before markers to make all markers interactive.
+        svg
+          .selectAll("rect")
+          .data(data.filter((d) => d.rangeDuration.distance > 0))
+          .enter()
+          .append("rect")
+          .attr("x", (d) => xScale(d.distance + d.rangeStart.distance))
+          .attr("y", (d) => height / 2 + (d.track - 2 - 0.5) * trackHeight)
+          .attr("width", (d) => xScale(d.rangeDuration.distance)) // The width depends on start and end
+          .attr("height", trackHeight) // Height of the rectangle
+          .style("fill", (d) => d.color)
+          .style("opacity", 0.5);
 
-            // Time axis.
-            svg
-                .append("g")
-                .attr("transform", `translate(0,0)`)
-                .call(
-                    d3.axisTop(timeScale).tickFormat((d) => formatHHMM(d))
-                )
-                .append("text")
-                .attr("x", width / 2)
-                .attr("y", -30)
-                .attr("text-anchor", "middle")
-                .attr("fill", "black")
-                .text("Time, hh:mm");
-        }
+        // Add labels
+        svg
+          .selectAll("text")
+          .data(data)
+          .enter()
+          .append("text")
+          .attr("x", (d) => xScale(d.distance) + 10)
+          .attr("y", (d) => height / 2 + (d.track - 2) * trackHeight + 6)
+          .attr("text-anchor", "left")
+          .text((d) => d.label);
 
-        function updateControls() {
-            document.getElementById("race-distance").value = appData.raceDistance;
-            document.getElementById("race-duration").value = appData.raceDuration;
+        // Markers - created last to make an interactive tooltip.
+        svg
+          .selectAll("circle")
+          .data(data)
+          .enter()
+          .append("circle")
+          .attr("cx", (d) => xScale(d.distance))
+          .attr("cy", (d) => height / 2 + (d.track - 2) * trackHeight)
+          .attr("r", 5)
+          .style("fill", (d) => d.color)
+          .on("mouseover", (event, d) => {
+            tooltip
+              // TODO: format time
+              .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.notes}`)
+              .style("visibility", "visible")
+              .style("top", event.pageY - 20 + "px")
+              .style("left", event.pageX + 10 + "px");
+          })
+          .on("mouseout", () => tooltip.style("visibility", "hidden"));
 
-            const tableContainer = document.getElementById("table-container");
-            tableContainer.innerHTML = ""; // Clear previous content
+        // Distance axis.
+        svg
+          .append("g")
+          .attr("transform", `translate(0,${height})`)
+          .call(d3.axisBottom(xScale))
+          .append("text")
+          .attr("x", width / 2)
+          .attr("y", 30)
+          .attr("text-anchor", "middle")
+          .attr("fill", "black")
+          .text("Distance, m");
 
-            const table = document.createElement("table");
-            table.className = "table-auto";
+        // Time axis.
+        svg
+          .append("g")
+          .attr("transform", `translate(0,0)`)
+          .call(
+            d3.axisTop(timeScale).tickFormat((d) => formatHHMM(d))
+          )
+          .append("text")
+          .attr("x", width / 2)
+          .attr("y", -30)
+          .attr("text-anchor", "middle")
+          .attr("fill", "black")
+          .text("Time, hh:mm");
+      } catch (e) {
+        showError(e.message);
+      }
+    }
 
-            // Create table header
-            const thead = document.createElement("thead");
-            const headerRow = document.createElement("tr");
-            [
-                { label: "", classes: "" },
-                { label: "", classes: "" },
-                { label: "Color", classes: "" },
-                { label: "Track", classes: "" },
-                { label: "Label", classes: "" },
-                { label: "Marker", classes: "" },
-                { label: "Offset", classes: "" },
-                { label: "Duration", classes: "" },
-                { label: "Notes", classes: "" },
-            ].forEach((header) => {
-                const th = document.createElement("th");
-                th.textContent = header.label;
-                th.className = header.classes;
-                if (header.label == "Marker") {
-                    const btn = document.createElement("button");
-                    btn.innerHTML = `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+    function updateControls() {
+      document.getElementById("race-distance").value = appData.raceDistance;
+      document.getElementById("race-duration").value = appData.raceDuration;
+
+      const tableContainer = document.getElementById("table-container");
+      tableContainer.innerHTML = ""; // Clear previous content
+
+      const table = document.createElement("table");
+      table.className = "table-auto";
+
+      // Create table header
+      const thead = document.createElement("thead");
+      const headerRow = document.createElement("tr");
+      [
+        { label: "", classes: "" },
+        { label: "", classes: "" },
+        { label: "Color", classes: "" },
+        { label: "Track", classes: "" },
+        { label: "Label", classes: "" },
+        { label: "Marker", classes: "" },
+        { label: "Offset", classes: "" },
+        { label: "Duration", classes: "" },
+        { label: "Notes", classes: "" },
+      ].forEach((header) => {
+        const th = document.createElement("th");
+        th.textContent = header.label;
+        th.className = header.classes;
+        if (header.label == "Marker") {
+          const btn = document.createElement("button");
+          btn.innerHTML = `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 20V10m0 10-3-3m3 3 3-3m5-13v10m0-10 3 3m-3-3-3 3"/>
 </svg>`;
-                    btn.title = "Sort rows"
-                    btn.className = "border-0 p-0 m-0 align-bottom"
-                    btn.addEventListener("click", sortPoints);
-                    th.appendChild(btn);
-                }
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            table.appendChild(thead);
+          btn.title = "Sort rows"
+          btn.className = "border-0 p-0 m-0 align-bottom"
+          btn.addEventListener("click", sortPoints);
+          th.appendChild(btn);
+        }
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
 
-            // Create table body
-            const tbody = document.createElement("tbody");
-            const addCellInput = (row, v, set, type = "text", inputClassName = "") => {
-                const td = document.createElement("td");
-                const input = document.createElement("input");
-                input.className = inputClassName;
-                input.type = type;
-                input.value = v;
-                input.addEventListener("input", (e) => {
-                    set(e.target.value);
-                    save();
-                    render();
-                });
-                td.appendChild(input);
-                row.appendChild(td);
-            };
-            const addCellTextArea = (row, v, set, className = "") => {
-                const td = document.createElement("td");
-                const input = document.createElement("textarea");
-                input.value = v;
-                input.className = className;
-                input.addEventListener("input", (e) => {
-                    set(e.target.value);
-                    save();
-                    render();
-                });
-                td.appendChild(input);
-                row.appendChild(td);
-            };
-            const addCellButton = (row, label, tooltip, click) => {
-                const td = document.createElement("td");
-                const btn = document.createElement("button");
-                btn.title = tooltip;
-                btn.innerHTML = label;
-                btn.addEventListener("click", click);
-                td.appendChild(btn);
-                row.appendChild(td);
-            };
+      // Create table body
+      const tbody = document.createElement("tbody");
+      const addCellInput = (row, v, set, type = "text", inputClassName = "") => {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.className = inputClassName;
+        input.type = type;
+        input.value = v;
+        input.addEventListener("input", (e) => {
+          set(e.target.value);
+          onDataUpdated(); 
+        });
+        td.appendChild(input);
+        row.appendChild(td);
+      };
+      const addCellTextArea = (row, v, set, className = "") => {
+        const td = document.createElement("td");
+        const input = document.createElement("textarea");
+        input.value = v;
+        input.className = className;
+        input.addEventListener("input", (e) => {
+          set(e.target.value);
+          onDataUpdated();
+        });
+        td.appendChild(input);
+        row.appendChild(td);
+      };
+      const addCellButton = (row, label, tooltip, click) => {
+        const td = document.createElement("td");
+        const btn = document.createElement("button");
+        btn.title = tooltip;
+        btn.innerHTML = label;
+        btn.addEventListener("click", click);
+        td.appendChild(btn);
+        row.appendChild(td);
+      };
 
-            appData.points.forEach((d, i) => {
-                const row = document.createElement("tr");
+      appData.points.forEach((d, i) => {
+        const row = document.createElement("tr");
 
-                addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+        addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"/>
 </svg>
 `, "duplicate", () => {
-                    appData.points.push({ ...d });
-                    save();
-                    render();
-                    updateControls();
-                    console.log('copy');
-                });
-                addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+          appData.points.push({ ...d });
+          onDataUpdated();
+          updateControls();
+          console.log('copy');
+        });
+        addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
 </svg>`, "delete", () => {
-                    appData.points.splice(i, 1);
-                    save();
-                    render();
-                    updateControls();
-                    console.log('delete');
-                });
-                addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
-                addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-11 border p-1");
-                addCellInput(row, d.label, (v) => (d.label = v), "text", "border p-1");
-                addCellInput(row, d.position, (v) => (d.position = v), "text", "border p-1 w-20");
-                addCellInput(row, d.start, (v) => (d.start = v), "text", "border p-1 w-20");
-                addCellInput(row, d.duration, (v) => (d.duration = v), "text", "border p-1 w-20");
-                addCellTextArea(row, d.notes, (v) => (d.notes = v), "border w-72");
-                tbody.appendChild(row);
-            });
+          appData.points.splice(i, 1);
+          onDataUpdated();
+          updateControls();
+          console.log('delete');
+        });
+        addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
+        addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-11 border p-1");
+        addCellInput(row, d.label, (v) => (d.label = v), "text", "border p-1");
+        addCellInput(row, d.position, (v) => (d.position = v), "text", "border p-1 w-20");
+        addCellInput(row, d.start, (v) => (d.start = v), "text", "border p-1 w-20");
+        addCellInput(row, d.duration, (v) => (d.duration = v), "text", "border p-1 w-20");
+        addCellTextArea(row, d.notes, (v) => (d.notes = v), "border w-72");
+        tbody.appendChild(row);
+      });
 
-            const row = document.createElement("tr");
-            addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+      const row = document.createElement("tr");
+      addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14m-7 7V5"/>
 </svg>`, "add new", () => {
-                addPoint();
-                save();
-                render();
-                updateControls();
-            });
-            tbody.appendChild(row);
+        addPoint();
+        onDataUpdated();
+        updateControls();
+      });
+      tbody.appendChild(row);
 
-            table.appendChild(tbody);
-            tableContainer.appendChild(table);
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
+    }
+    const strToMeters = (value, unit) => {
+      const val = parseFloat(value);
+      switch (unit) {
+        case "m":
+          return val; // meters
+        case "km":
+          return val * 1000; // kilometers to meters
+        case "mi":
+          return val * 1609.34; // miles to meters
+        default:
+          return 0;
+      }
+    };
+
+    function parseDistance(input) {
+      input = input.toString().trim();
+      if (input === "") return 0;
+      const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|mi)$/; // Matches distances like "12km", "5mi"
+      let match = input.match(distanceRegex);
+      if (match) {
+        const value = match[1];
+        const unit = match[2];
+        return strToMeters(value, unit);
+      }
+      throw new Error(`cannot parse '${input}' as distance, format is <number>(m|km|mi)`);
+    }
+
+    function parseTime(input) {
+      input = input.toString().trim();
+      if (input === "") return 0;
+      const timeRegex = /^([+-]?\d*\.?\d*) *(s|sec|min|h)|[+-]?(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/; // Matches time like "1.5h", "45min", "01:30"
+
+      const convertTimeToSeconds = (value, unit) => {
+        const val = parseFloat(value);
+        switch (unit) {
+          case "s":
+          case "sec":
+            return val;
+          case "min":
+            return val * 60;
+          case "h":
+            return val * 3600;
+          default:
+            return 0;
         }
-        const strToMeters = (value, unit) => {
-            const val = parseFloat(value);
-            switch (unit) {
-                case "m":
-                    return val; // meters
-                case "km":
-                    return val * 1000; // kilometers to meters
-                case "mi":
-                    return val * 1609.34; // miles to meters
-                default:
-                    return 0;
-            }
+      };
+
+      const parseHHMMSS = (hours, minutes, seconds = 0) => {
+        return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+      };
+
+      let match = input.match(timeRegex);
+      if (match) {
+        let sec = 0;
+        if (match[1]) {
+          // Time in "float h/min/s" format, like "1.5h" or "45min".
+          const value = match[1];
+          const unit = match[2];
+          sec = convertTimeToSeconds(value, unit);
+        } else if (match[3] && match[4]) {
+          // Time in "hh:mm" or "hh:mm:ss" format.
+          const hours = match[3];
+          const minutes = match[4];
+          const seconds = match[5] || 0;
+          sec = parseHHMMSS(hours, minutes, seconds);
+          if (input.startsWith("-")) sec *= -1;
+        }
+        return sec;
+      }
+      throw new Error(`cannot parse '${input}' as time`);
+    }
+
+    function parseDistanceOrTime(input) {
+      input = input.trim();
+      if (input === "") {
+        return { time: 0, distance: 0 };
+      }
+
+      const timeToDistance = (s) => {
+        return (s / raceDuration()) * raceDistance();
+      };
+
+      const distanceToTime = (d) => {
+        return (d / raceDistance()) * raceDuration();
+      };
+      try {
+        const d = parseDistance(input);
+        return { time: distanceToTime(d), distance: d };
+      } catch (e) {
+      }
+
+      try {
+        const sec = parseTime(input);
+        return { time: sec, distance: timeToDistance(sec) };
+      } catch (e) {
+      }
+
+      throw new Error(`cannot parse '${input}' as distance or time`);
+    }
+
+    function sortPoints() {
+      appData.points.sort((a, b) =>
+        parseDistanceOrTime(a.position).distance - parseDistanceOrTime(b.position).distance
+      );
+      save();
+      updateControls();
+    }
+
+    function addPoint() {
+      appData.points.push({
+        "color": "#000000",
+        "position": "0:00",
+        "label": `#${appData.points.length + 1}`,
+        "notes": "",
+        "start": "",
+        "duration": "",
+        "track": 0
+      });
+      onDataUpdated();
+      updateControls();
+    }
+
+    document.getElementById("race-distance").addEventListener("input", (e) => {
+      appData.raceDistance = e.target.value;
+      onDataUpdated();
+    });
+
+    document.getElementById("race-duration").addEventListener("input", (e) => {
+      appData.raceDuration = e.target.value;
+      onDataUpdated();
+    });
+
+    function onDataUpdated() {
+      hideMessage();
+      save();
+      render();
+    }
+
+    document.getElementById("copy-json").addEventListener("click", () => {
+      navigator.clipboard.writeText(JSON.stringify(appData)).then(function () {
+        showMessage('Copied JSON to clipboard', 'text-green-600', 3000);
+      }).catch(function (error) {
+        showError('failed to copy to clipboard');
+      });
+    });
+
+    document.getElementById("import-json").addEventListener("click", () => {
+      const s = prompt("insert one-line JSON");
+      if (s == null) return;
+      appData = JSON.parse(s);
+      onDataUpdated();
+      updateControls();
+    });
+
+
+    function maybeEscapeCSVString(s) {
+      let value = String(s || '');
+      if (/[",\n]/.test(value)) {
+        value = `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    }
+
+    function toCSV() {
+      const headers = [
+        { label: 'Label', value: 'label' },
+        { label: 'Position', value: 'position' },
+        { label: 'Position seconds', value: 'time' },
+        { label: 'Position meters', value: 'distance' },
+        { label: 'Offset', value: 'start' },
+        { label: 'Offset seconds', value: 'range_start_time' },
+        { label: 'Offset meters', value: 'range_start_distance' },
+        { label: 'Duration', value: 'duration' },
+        { label: 'Duration seconds', value: 'range_duration_time' },
+        { label: 'Duration meters', value: 'range_duration_distance' },
+        { label: 'Notes', value: 'notes' },
+      ];
+      const data = markers();
+      // Use lodash to map the points array and append metadata
+      const rows = data.map((d) => {
+        return {
+          ...d,
+          'range_start_time': _.round(d.rangeStart.time),
+          'range_start_distance': _.round(d.rangeStart.distance),
+          'range_duration_time': _.round(d.rangeDuration.time),
+          'range_duration_distance': _.round(d.rangeDuration.distance),
         };
+      });
+      // Generate the CSV string
+      const csvRows = [
+        headers.map(h => h.label),
+        ...rows.map(row => headers.map(h => maybeEscapeCSVString(row[h.value] || '')).join(','))
+      ];
+      return csvRows.join('\n');
+    }
 
-        function parseDistance(input) {
-            input = input.toString().trim();
-            const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|mi)$/; // Matches distances like "12km", "5mi"
-            let match = input.match(distanceRegex);
-            if (match) {
-                const value = match[1];
-                const unit = match[2];
-                return [strToMeters(value, unit), ""];
-            }
-            return [0, `cannot parse ${input} as distance, format is <number>(m|km|mi)`];
-        }
+    document.getElementById("copy-csv").addEventListener("click", () => {
+      const s = toCSV();
+      navigator.clipboard.writeText(s).then(function () {
+        showMessage('Copied CSV to clipboard', 'text-green-600', 3000);
+      }).catch(function (error) {
+        showError('failed to copy to clipboard');
+      });
+    });
 
-        function parseTime(input) {
-            input = input.toString().trim();
-            const timeRegex = /^([+-]?\d*\.?\d*) *(s|sec|min|h)|[+-]?(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/; // Matches time like "1.5h", "45min", "01:30"
+    function showError(err) {
+      showMessage(err, 'text-red-600');
+    }
 
-            // Convert time to seconds
-            const convertTimeToSeconds = (value, unit) => {
-                const val = parseFloat(value);
-                switch (unit) {
-                    case "s":
-                    case "sec":
-                        return val; // seconds
-                    case "min":
-                        return val * 60; // minutes to seconds
-                    case "h":
-                        return val * 3600; // hours to seconds
-                    default:
-                        return 0;
-                }
-            };
-
-            // Convert hh:mm:ss format to seconds.
-            const parseHHMMSS = (hours, minutes, seconds = 0) => {
-                return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
-            };
-
-            let match = input.match(timeRegex);
-            if (match) {
-                let sec = 0;
-                if (match[1]) {
-                    // Time in "float h/min/s" format, like "1.5h" or "45min".
-                    const value = match[1];
-                    const unit = match[2];
-                    sec = convertTimeToSeconds(value, unit);
-                } else if (match[3] && match[4]) {
-                    // Time in "hh:mm" or "hh:mm:ss" format.
-                    const hours = match[3];
-                    const minutes = match[4];
-                    const seconds = match[5] || 0;
-                    sec = parseHHMMSS(hours, minutes, seconds);
-                    if (input.startsWith("-")) sec *= -1;
-                }
-                return [sec, ""];
-            }
-            return [0, `cannot parse '${input}' as time`];
-        }
-
-        // TODO Report errors
-        function parseDistanceOrTime(input) {
-            // Regex to match the input format: "(+-)\d*(.\d*|:\d\d|:\d\d:\d\d)?(m|km|mi|s|h|min)"
-
-            const timeToDistance = (s) => {
-                return (s / raceDuration()) * raceDistance();
-            };
-
-            const distanceToTime = (d) => {
-                return (d / raceDistance()) * raceDuration();
-            };
-
-            const [d, err] = parseDistance(input);
-
-            if (err == "") {
-                return { time: distanceToTime(d), distance: d };
-            }
-
-            const [sec, err2] = parseTime(input);
-            if (err2 == "") {
-                return { time: sec, distance: timeToDistance(sec) };
-            }
-
-            return { time: 0, distance: 0 };
-        }
-
-        function sortPoints() {
-            appData.points.sort((a, b) =>
-                parseDistanceOrTime(a.position).distance - parseDistanceOrTime(b.position).distance
-            );
-            save();
-            updateControls();
-        }
-
-        function addPoint() {
-            appData.points.push({
-                "color": "#000000",
-                "position": "0:00",
-                "label": `#${appData.points.length + 1}`,
-                "notes": "",
-                "start": "",
-                "duration": "",
-                "track": 0
-            });
-            save();
-            render();
-            updateControls();
-        }
-
-        document.getElementById("race-distance").addEventListener("input", (e) => {
-            appData.raceDistance = e.target.value;
-            save();
-            render();
-        });
-
-        document.getElementById("race-duration").addEventListener("input", (e) => {
-            appData.raceDuration = e.target.value;
-            save();
-            render();
-        });
-
-        document.getElementById("copy-json").addEventListener("click", () => {
-            navigator.clipboard.writeText(JSON.stringify(appData)).then(function () {
-                showMessage('Copied JSON to clipboard', 'text-green-600', 3000);
-            }).catch(function (error) {
-                showError('failed to copy to clipboard');
-            });
-        });
-
-        document.getElementById("import-json").addEventListener("click", () => {
-            const s = prompt("insert one-line JSON");
-            if (s == null) return;
-            appData = JSON.parse(s);
-            save();
-            render();
-            updateControls();
-        });
-
-
-        function maybeEscapeCSVString(s) {
-            let value = String(s || '');
-            if (/[",\n]/.test(value)) {
-                value = `"${value.replace(/"/g, '""')}"`;
-            }
-            return value;
-        }
-
-        function toCSV() {
-            const headers = [
-                { label: 'Label', value: 'label' },
-                { label: 'Position', value: 'position' },
-                { label: 'Position seconds', value: 'time' },
-                { label: 'Position meters', value: 'distance' },
-                { label: 'Offset', value: 'start' },
-                { label: 'Offset seconds', value: 'range_start_time' },
-                { label: 'Offset meters', value: 'range_start_distance' },
-                { label: 'Duration', value: 'duration' },
-                { label: 'Duration seconds', value: 'range_duration_time' },
-                { label: 'Duration meters', value: 'range_duration_distance' },
-                { label: 'Notes', value: 'notes' },
-            ];
-            const data = markers();
-            // Use lodash to map the points array and append metadata
-            const rows = data.map((d) => {
-                return {
-                    ...d,
-                    'range_start_time': _.round(d.rangeStart.time),
-                    'range_start_distance': _.round(d.rangeStart.distance),
-                    'range_duration_time': _.round(d.rangeDuration.time),
-                    'range_duration_distance': _.round(d.rangeDuration.distance),
-                };
-            });
-            // Generate the CSV string
-            const csvRows = [
-                headers.map(h => h.label),
-                ...rows.map(row => headers.map(h => maybeEscapeCSVString(row[h.value] || '')).join(','))
-            ];
-            return csvRows.join('\n');
-        }
-
-        document.getElementById("copy-csv").addEventListener("click", () => {
-            const s = toCSV();
-            navigator.clipboard.writeText(s).then(function () {
-                showMessage('Copied CSV to clipboard', 'text-green-600', 3000);
-            }).catch(function (error) {
-                showError('failed to copy to clipboard');
-            });
-        });
-
-        function showError(err) {
-            showMessage(err, 'text-red-600');
-        }
-
-        function showMessage(content, classes, timeout = null) {
-            const m = document.getElementById('message');
-            m.className = classes;
-            m.innerText = content;
-            if (timeout != null) {
-                setTimeout(() => {
-                    m.className = 'invisible';
-                }, timeout)
-            }
-        }
-
-        function toggleInstructions(show) {
-            document.getElementById('instructions').classList.toggle("hidden", !show);
-            document.getElementById('show-instructions').classList.toggle("hidden", show);
-            if (show) {
-                localStorage.removeItem('hide-instructions');
-            } else {
-                localStorage.setItem('hide-instructions', 'hide');
-            }
-        }
-
-        // TODO: pace
-        // TODO: start / end of interval in tooltip
-        // TODO: name and contact info, panel next to the title
-        // TODO: Hide instructions button
-        // TODO: count site visits without cookies.
-
+    function showMessage(content, classes, timeout = null) {
+      const m = document.getElementById('message');
+      m.className = 'ml-2 ' + classes;
+      m.innerText = content;
+      if (timeout != null) {
         setTimeout(() => {
-            loadData();
-            render();
-            updateControls();
-            toggleInstructions(localStorage.getItem('hide-instructions') == null);
-        }, 0);
+          m.className = 'invisible';
+        }, timeout)
+      }
+    }
 
-        window.addEventListener('resize', _.throttle(render, 500));
-    </script>
+    function hideMessage() {
+      document.getElementById('message').className = 'invisible';
+    }
+
+    function toggleInstructions(show) {
+      document.getElementById('instructions').classList.toggle("hidden", !show);
+      document.getElementById('show-instructions').classList.toggle("hidden", show);
+      if (show) {
+        localStorage.removeItem('hide-instructions');
+      } else {
+        localStorage.setItem('hide-instructions', 'hide');
+      }
+    }
+
+    // TODO: pace
+    // TODO: start / end of interval in tooltip
+    // TODO: name and contact info, panel next to the title
+    // TODO: count site visits without cookies.
+
+    setTimeout(() => {
+      loadData();
+      render();
+      updateControls();
+      toggleInstructions(localStorage.getItem('hide-instructions') == null);
+    }, 0);
+
+    window.addEventListener('resize', _.throttle(render, 500));
+  </script>
 </body>
 
 </html>
