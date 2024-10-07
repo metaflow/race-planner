@@ -75,9 +75,13 @@
         <label for="race-distance" class="inline-block">Distance</label>
         <input type="text" id="race-distance" class="border p-1 w-20"></input>
       </div>
-      <div>
+      <div class="mr-4">
         <label for="race-duration" class="inline-block">Duration</label>
         <input type="text" id="race-duration" class="border p-1 w-20"></input>
+      </div>
+      <div>
+        <span class="inline-block">Pace is</span>
+        <span id="race-pace" class="inline-block">0:00 min/km 0:00 min/mile.</span>
       </div>
     </div>
 
@@ -103,7 +107,7 @@
       appData = JSON.parse(s);
     };
 
-    const margin = { top: 50, right: 100, bottom: 30, left: 30 };
+    const margin = { top: 50, right: 100, bottom: 35, left: 30 };
 
     const svg = d3
       .select("#timeline-container")
@@ -158,9 +162,17 @@
 
     function render() {
       try {
+        // Process data first to catch errors.
+        const data = markers();
+
+        let pace = raceDuration() / (raceDistance() / 1000);
+        let paceMinPerKm = pace * 60;
+        let paceMinPerMile = paceMinPerKm * 1.609;
+        document.getElementById("race-pace").innerHTML = `${formatHHMM(paceMinPerKm)} min/km or ${formatHHMM(paceMinPerMile)} min/mile.`;
+
         // -20px for scroll.
         const width = document.getElementById('timeline-container').clientWidth - margin.left - margin.right - 20;
-        const height = 200 - margin.top - margin.bottom;
+        const height = 220 - margin.top - margin.bottom;
         d3
           .select("#timeline-container")
           .select('svg')
@@ -171,28 +183,23 @@
         svg.selectAll("text").remove();
         svg.selectAll("g").remove();
         svg.selectAll("rect").remove();
-        const data = markers();
 
         // Scales will be updated in `render()` based on current data.
-        const xScale = d3.scaleLinear()
-          .domain([0, Math.max(raceDistance(), d3.max(data, (d) => d.distance))])
-          .range([0, width]);
-        const timeScale = d3.scaleLinear()
-          .domain([0, Math.max(raceDuration(), d3.max(data, (d) => d.time))])
-          .range([0, width]);
+        const xScale = d3.scaleLinear().domain([0, raceDistance()]).range([0, width]);
+        const timeScale = d3.scaleLinear().domain([0, raceDuration()]).range([0, width]);
 
         const trackHeight = 20;
 
-        // Periods, before markers to make all markers interactive.
+        // Periods, before markers to make all markers hoverable.
         svg
           .selectAll("rect")
           .data(data.filter((d) => d.rangeDuration.distance > 0))
           .enter()
           .append("rect")
           .attr("x", (d) => xScale(d.distance + d.rangeStart.distance))
-          .attr("y", (d) => height / 2 + (d.track - 2 - 0.5) * trackHeight)
-          .attr("width", (d) => xScale(d.rangeDuration.distance)) // The width depends on start and end
-          .attr("height", trackHeight) // Height of the rectangle
+          .attr("y", (d) => height / 2 + (d.track - 2 - 0.5) * trackHeight + 2)
+          .attr("width", (d) => xScale(d.rangeDuration.distance))
+          .attr("height", trackHeight - 4)
           .style("fill", (d) => d.color)
           .style("opacity", 0.5);
 
@@ -218,9 +225,19 @@
           .attr("r", 5)
           .style("fill", (d) => d.color)
           .on("mouseover", (event, d) => {
+            let s = `${d.label}<br/>${_.round(d.distance / 1000, 2)}`;
+            if (d.rangeDuration.distance > 0) {
+              s += ` [${_.round((d.distance + d.rangeStart.distance) / 1000, 2)}..${_.round((d.distance + d.rangeStart.distance + d.rangeDuration.distance) / 1000, 2)}] km`;
+            } else {
+              s += ' km';
+            }
+            s += `<br/>${formatHHMM(d.time)} `;
+            if (d.rangeDuration.distance > 0) {
+              s += ` [${formatHHMM(d.rangeStart.time)}..${formatHHMM(d.rangeDuration.time)}]`;
+            }
+            if (d.notes) s += `<br/>${d.notes}`;
             tooltip
-              // TODO: format time
-              .html(`${d.label}<br/>${_.round(d.distance / 1000, 2)} km<br/>${formatHHMM(d.time)}<br/>${d.notes}`)
+              .html(s)
               .style("visibility", "visible")
               .style("top", event.pageY - 20 + "px")
               .style("left", event.pageX + 10 + "px");
@@ -230,18 +247,21 @@
         // Distance axis.
         svg
           .append("g")
+          .attr("class", "x-axis")
           .attr("transform", `translate(0,${height})`)
           .call(d3.axisBottom(xScale))
           .append("text")
           .attr("x", width / 2)
-          .attr("y", 30)
+          .attr("y", 32)
           .attr("text-anchor", "middle")
-          .attr("fill", "black")
+          .attr("font-size", "14px")
+          .attr("fill", "rgb(31 41 55 / var(--tw-text-opacity))")
           .text("Distance, m");
 
         // Time axis.
         svg
           .append("g")
+          .attr("class", "x-axis")
           .attr("transform", `translate(0,0)`)
           .call(
             d3.axisTop(timeScale).tickFormat((d) => formatHHMM(d))
@@ -250,8 +270,12 @@
           .attr("x", width / 2)
           .attr("y", -30)
           .attr("text-anchor", "middle")
-          .attr("fill", "black")
+          .attr("fill", "rgb(31 41 55 / var(--tw-text-opacity))")
+          .attr("font-size", "14px")
           .text("Time, hh:mm");
+
+        svg.selectAll(".x-axis text")
+          .style("font-size", "12px");
       } catch (e) {
         showError(e.message);
       }
@@ -309,7 +333,7 @@
         input.value = v;
         input.addEventListener("input", (e) => {
           set(e.target.value);
-          onDataUpdated(); 
+          onDataUpdated();
         });
         td.appendChild(input);
         row.appendChild(td);
@@ -614,8 +638,6 @@
     }
 
     // TODO: pace
-    // TODO: start / end of interval in tooltip
-    // TODO: name and contact info, panel next to the title
     // TODO: count site visits without cookies.
 
     setTimeout(() => {
