@@ -37,7 +37,7 @@
   // This tag is used to count number of page views only.
   gtag('js', new Date())
   const GA_LOCAL_STORAGE_KEY = 'ga_client_id';
-  const client_id = localStorage.getItem(GA_LOCAL_STORAGE_KEY)
+  let client_id = localStorage.getItem(GA_LOCAL_STORAGE_KEY)
   if (client_id == null) {
     client_id = crypto.randomUUID()
     localStorage.setItem(GA_LOCAL_STORAGE_KEY, client_id)
