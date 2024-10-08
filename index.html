@@ -33,17 +33,8 @@
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  // gtag('js', new Date());
   // Configure Google Analytics to not use cookies.
-  // This tag is only used to count number of page views.
-  // gtag('config', 'G-QCH35BE370', {
-  //   'anonymize_ip': true, // Do not track IP address.
-  //   'storage': 'none',  // Disable cookies.
-  //   'client_storage': 'none',  // No localStorage/sessionStorage.
-  //   'client_id': crypto.randomUUID(), // Use a random ID to avoid cross-device tracking.
-  //   'allow_google_signals': false,  // Disable cross-device tracking.
-  //   'allow_ad_personalization_signals': false  // Disable ad tracking.
-  // });
+  // This tag is used to count number of page views only.
   gtag('js', new Date())
   const GA_LOCAL_STORAGE_KEY = 'ga_client_id';
   const client_id = localStorage.getItem(GA_LOCAL_STORAGE_KEY)
@@ -52,8 +43,11 @@
     localStorage.setItem(GA_LOCAL_STORAGE_KEY, client_id)
   }
   gtag('config', 'G-QCH35BE370', {
+    storage: 'none',  // Disable cookies.
+    client_storage: 'none',  // No localStorage/sessionStorage.
+    allow_google_signals: false,  // Disable cross-device tracking.
+    allow_ad_personalization_signals: false,  // Disable ad tracking.
     send_page_view: true,
-    client_storage: 'none',
     client_id: client_id,
   });
 </script>
