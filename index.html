@@ -29,20 +29,32 @@
       @apply border-gray-300 border rounded;
     }
   </style>
-<script src="https://www.googletagmanager.com/gtag/js?id=G-QCH35BE370"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QCH35BE370"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  // gtag('js', new Date());
   // Configure Google Analytics to not use cookies.
   // This tag is only used to count number of page views.
-  gtag('config', 'G-QCH35BE370', {
-    'anonymize_ip': true, // Do not track IP address.
-    'storage': 'none',  // Disable cookies.
-    'client_storage': 'none',  // No localStorage/sessionStorage.
-    'client_id': crypto.randomUUID(), // Use a random ID to avoid cross-device tracking.
-    'allow_google_signals': false,  // Disable cross-device tracking.
-    'allow_ad_personalization_signals': false  // Disable ad tracking.
+  // gtag('config', 'G-QCH35BE370', {
+  //   'anonymize_ip': true, // Do not track IP address.
+  //   'storage': 'none',  // Disable cookies.
+  //   'client_storage': 'none',  // No localStorage/sessionStorage.
+  //   'client_id': crypto.randomUUID(), // Use a random ID to avoid cross-device tracking.
+  //   'allow_google_signals': false,  // Disable cross-device tracking.
+  //   'allow_ad_personalization_signals': false  // Disable ad tracking.
+  // });
+  gtag('js', new Date())
+  const GA_LOCAL_STORAGE_KEY = 'ga_client_id';
+  const client_id = localStorage.getItem(GA_LOCAL_STORAGE_KEY)
+  if (client_id == null) {
+    client_id = crypto.randomUUID()
+    localStorage.setItem(GA_LOCAL_STORAGE_KEY, client_id)
+  }
+  gtag('config', 'GA_MEASUREMENT_ID', {
+    send_page_view: true,
+    client_storage: 'none',
+    client_id: client_id,
   });
 </script>
 </head>
