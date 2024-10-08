@@ -15,20 +15,37 @@
   <title>Interactive Race Planner</title>
   <style type="text/tailwindcss">
     button {
-            @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
-         }
-         th {
-            @apply font-normal;
-         }
-         textarea {
-            height: 34px;
-            @apply p-1;
-            margin-top: 1px;
-         }
-         input, textarea {
-            @apply border-gray-300 border rounded;
-         }
-    </style>
+      @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
+    }
+    th {
+      @apply font-normal;
+    }
+    textarea {
+      height: 34px;
+      @apply p-1;
+      margin-top: 1px;
+    }
+    input, textarea {
+      @apply border-gray-300 border rounded;
+    }
+  </style>
+    <!-- Google tag (gtag.js) -->
+     
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QCH35BE370"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  // Configure Google Analytics to not use cookies.
+  // This tag is only used to count number of page views.
+  gtag('config', 'G-QCH35BE370',{
+    'anonymize_ip': true, // Do not track IP address.
+    'storage': 'none',  // Disable cookies.
+    'client_storage': 'none',  // No localStorage/sessionStorage.
+    'allow_google_signals': false,  // Disable cross-device tracking.
+    'allow_ad_personalization_signals': false  // Disable ad tracking.
+  });
+</script>
 </head>
 
 <body class="text-gray-800 bg-slate-100">
@@ -652,3 +669,4 @@
 </body>
 
 </html>
+
