@@ -43,6 +43,10 @@
     localStorage.setItem(GA_LOCAL_STORAGE_KEY, client_id)
   }
   console.log('client_id', client_id);
+  gtag('consent', 'default', {
+      'ad_storage': 'denied',
+      'analytics_storage': 'denied',
+  });
   gtag('config', 'G-QCH35BE370', {
     'storage': 'none',  // Disable cookies.
     'client_storage': 'none',  // No localStorage/sessionStorage.
