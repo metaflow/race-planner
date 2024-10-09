@@ -12,7 +12,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
-  <title>Interactive Race Planner</title>
+  <title>Race Fueling Planner</title>
   <style type="text/tailwindcss">
     button {
       @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
@@ -42,7 +42,6 @@
     client_id = crypto.randomUUID()
     localStorage.setItem(GA_LOCAL_STORAGE_KEY, client_id)
   }
-  console.log('client_id', client_id);
   gtag('consent', 'default', {
       'ad_storage': 'denied',
       'analytics_storage': 'denied',
