@@ -37,7 +37,12 @@
     <div class="flex flex-row justify-start items-center">
       <h1 class="text-2xl">Interactive race nutrition planner</h1>
       <div class="ml-auto mr-4">
-        <button  id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show info</button>
+        <button id="show-instructions" class="hidden" onclick="toggleInstructions(true)">Show info</button>
+        <button id="hide-instructions" class="ml-0" onclick="toggleInstructions(false)">Hide info</button>
+        <button class="mt-0 ml-2" id="reset" title="Delete all rows and load sample data">Reset</button>
+        <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
+        <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
+        <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
       </div>
       <div>
         <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
@@ -62,16 +67,12 @@
       <p>
         <a class="underline" href="https://www.flaticon.com/free-icons/running-shoes" title="running shoes icons">Running shoes icons created by Freepik - Flaticon</a>
       </p>
-      <button class="ml-0" onclick="toggleInstructions(false)">Hide info</button>
     </div>
 
   </div>
   </div>
   <div class="h-full w-full">
-    <button class="mt-0 ml-2" id="reset" title="Delete all rows and load sample data">Reset</button>
-    <button class="mt-0" id="copy-json" title="Copy data in JSON format to share or transfer">Copy JSON</button>
-    <button class="mt-0" id="import-json" title="Import JSON exported from another session">Import JSON</button>
-    <button class="mt-0" id="copy-csv" title="Copy plan in CSV format to use in spreadsheet">Copy CSV</button>
+    
     <div id="message" class="invisible ml-2">messages</div>
     <div id="timeline-container" class="w-full"></div>
 
@@ -634,6 +635,7 @@
 
     function toggleInstructions(show) {
       document.getElementById('instructions').classList.toggle("hidden", !show);
+      document.getElementById('hide-instructions').classList.toggle("hidden", !show);
       document.getElementById('show-instructions').classList.toggle("hidden", show);
       if (show) {
         localStorage.removeItem('hide-instructions');
