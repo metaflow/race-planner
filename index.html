@@ -33,14 +33,10 @@
 
 <body class="text-gray-800 bg-slate-100">
   <div class="m-2 mb-0">
-    <div class="flex flex-row justify-between">
+    <div class="flex flex-row justify-start items-center">
       <h1 class="text-2xl">Interactive race nutrition planner</h1>
-      <button id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show instructions</button>
-      <div class="grow-0 ml-4">
-        <span class="pr-2">
-          By <a class="underline" href="https://github.com/metaflow" target="_blank">Mikhail Goncharov</a>,
-          2024
-        </span>
+      <button class="ml-auto mr-4" id="show-instructions" onclick="toggleInstructions(true)" class="hidden">Show info</button>
+      <div>
         <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
         <script
           type='text/javascript'>kofiwidget2.init('Support me', '#91c0d6', 'M4M114E6DD'); kofiwidget2.draw();</script>
@@ -57,7 +53,13 @@
       <p>Each marker can optionally have an "effect" range, specified by an offset and duration. This is useful
         for visualizing when certain nutritional items, like a coffee shot, will take effect.</p>
       <p>Move markers up and down with "Track" to separate them visually.</p>
-      <button class="ml-0" onclick="toggleInstructions(false)">Hide instructions</button>
+      <p class="pt-2">
+        Created by <a class="underline" href="https://github.com/metaflow" target="_blank">Mikhail Goncharov</a>, 2024.
+      </p>
+      <p>
+        <a class="underline" href="https://www.flaticon.com/free-icons/running-shoes" title="running shoes icons">Running shoes icons created by Freepik - Flaticon</a>
+      </p>
+      <button class="ml-0" onclick="toggleInstructions(false)">Hide info</button>
     </div>
 
   </div>
