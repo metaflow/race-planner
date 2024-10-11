@@ -13,7 +13,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
   <script src=" https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js "></script>
-  <title>Race Fueling Planner</title>
+  <title>Race Nutrition Planner</title>
   <style type="text/tailwindcss">
     button {
       @apply border-gray-300 border rounded p-1 pl-2 pr-2 m-1 font-normal bg-white;
@@ -35,7 +35,7 @@
 <body class="text-gray-800 bg-slate-100">
   <div class="m-2 mb-0">
     <div class="flex flex-row justify-start items-center">
-      <h1 class="text-2xl">Interactive race nutrition planner</h1>
+      <h1 class="text-2xl">Race Nutrition Planner</h1>
       <div class="ml-auto mr-4">
         <button id="show-instructions" class="hidden" onclick="toggleInstructions(true)">Show info</button>
         <button id="hide-instructions" class="ml-0" onclick="toggleInstructions(false)">Hide info</button>
@@ -52,7 +52,7 @@
     </div>
 
     <div id="instructions" class="hidden mb-2">
-      <p>Create and visualize aid stations and plan your fueling strategy for the next race.</p>
+      <p>Interactively create and visualize your fueling strategy for the next race.</p>
       <p>Begin by entering the distance and planned duration of the race.</p>
       <p>Markers can be placed based on either time or distance. Examples of acceptable values for distance: "100
         m", "3.4 km", "2 mi".</p>
