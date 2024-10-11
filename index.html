@@ -300,12 +300,12 @@
       const thead = document.createElement("thead");
       const headerRow = document.createElement("tr");
       [
-        { label: "", classes: "" },
+        { label: "", classes: "", sort: true },
         { label: "", classes: "" },
         { label: "Color", classes: "" },
         { label: "Track", classes: "" },
         { label: "Label", classes: "" },
-        { label: "Marker", classes: "" },
+        { label: "Position", classes: "" },
         { label: "Offset", classes: "" },
         { label: "Duration", classes: "" },
         { label: "Notes", classes: "" },
@@ -313,13 +313,11 @@
         const th = document.createElement("th");
         th.textContent = header.label;
         th.className = header.classes;
-        if (header.label == "Marker") {
+        if (header.sort === true) {
           const btn = document.createElement("button");
-          btn.innerHTML = `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 20V10m0 10-3-3m3 3 3-3m5-13v10m0-10 3 3m-3-3-3 3"/>
-</svg>`;
-          btn.title = "Sort rows"
-          btn.className = "border-0 p-0 m-0 align-bottom"
+          btn.innerHTML = `Sort`;
+          btn.title = "Sort rows by track and position"
+          btn.className = "border-1 p-1 m-0 align-bottom"
           btn.addEventListener("click", sortPoints);
           th.appendChild(btn);
         }
@@ -371,14 +369,14 @@
         addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linejoin="round" stroke-width="2" d="M9 8v3a1 1 0 0 1-1 1H5m11 4h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-7a1 1 0 0 0-1 1v1m4 3v10a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-7.13a1 1 0 0 1 .24-.65L7.7 8.35A1 1 0 0 1 8.46 8H13a1 1 0 0 1 1 1Z"/>
 </svg>
-`, "duplicate", () => {
+`, "Duplicate", () => {
           appData.points.splice(i + 1, 0, { ...d });
           onDataUpdated();
           updateControls();
         });
         addCellButton(row, `<svg class="w-[20px] h-[20px] text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
-</svg>`, "delete", () => {
+</svg>`, "Delete", () => {
           appData.points.splice(i, 1);
           onDataUpdated();
           updateControls();
