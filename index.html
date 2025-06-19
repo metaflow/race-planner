@@ -106,11 +106,125 @@
 
     document.getElementById("reset").addEventListener("click", resetData);
 
+    function updateDataFormat(data) {
+      if (data.formatVersion === "1") {
+        data.formatVersion = "2";
+        data.points = data.points.map((p) => ({
+          label: p.label,
+          color: p.color,
+          notes: p.notes,
+          position: p.position,
+          effects: [
+            {
+              start: p.start,
+              duration: p.duration,
+              track: p.track,
+            },
+          ],
+        }));
+      }
+      if (data.formatVersion !== "2") {
+        console.error("Unknown format version", data.formatVersion);
+      }
+      return data;
+    }
+
     const loadData = () => {
       let s = localStorage.getItem("race_data");
       if (s == null)
-        s = `{"formatVersion":"1","raceDistance":"21.1km","raceDuration":"2:30:00","points":[{"label":"Start","position":"0km","start":"","duration":"","color":"#d7284b","track":1,"notes":""},{"color":"#6f4e37","position":"0:10","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"10km","track":3},{"label":"Aid 1 💧","position":"5km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Aid 2 💧","position":"10km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"color":"#6f4e37","position":"1:20","label":"Gel ☕","notes":"Caffeine gel","start":"20min","duration":"8km","track":3},{"label":"Aid 3 💧🍌","position":"15km","start":"","duration":"","track":2,"notes":"","color":"#0080ff"},{"label":"Finish","position":"21.1km","start":"","duration":"","track":1,"notes":"You did it!","color":"#ff0000"}]}`;
-      appData = JSON.parse(s);
+        s = `{
+          "formatVersion": "1",
+          "raceDistance": "21.1km",
+          "raceDuration": "2:30:00",
+          "points": [
+            {
+              "label": "Start",
+              "position": "0km",
+              "color": "#d7284b",
+              "notes": "",
+              "effects": [{
+                "start": "0min",
+                "duration": "1km",
+                "track": 1
+              }]
+            },
+            {
+              "color": "#6f4e37",
+              "position": "0:10",
+              "label": "Gel ☕",
+              "notes": "Caffeine gel",
+              "effects": [
+                {
+                  "start": "20min",
+                  "duration": "10km",
+                  "track": 3
+                },
+                {
+                  "start": "1h",
+                  "duration": "5km",
+                  "track": 2
+                }
+              ]
+            },
+            {
+              "label": "Aid 1 💧",
+              "position": "5km",
+              "notes": "",
+              "color": "#0080ff",
+              "effects": []
+            },
+            {
+              "label": "Aid 2 💧",
+              "position": "10km",
+              "notes": "",
+              "color": "#0080ff",
+              "effects": [{
+                "start": "",
+                "duration": "",
+                "track": 2
+              }]
+            },
+            {
+              "color": "#6f4e37",
+              "position": "1:20",
+              "label": "Gel ☕",
+              "notes": "Caffeine gel",
+              "effects": [
+                {
+                  "start": "20min",
+                  "duration": "8km",
+                  "track": 3
+                }
+              ]
+            },
+            {
+              "label": "Aid 3 💧🍌",
+              "position": "15km",
+              "notes": "",
+              "color": "#0080ff",
+              "effects": [ {
+               "start": "",
+              "duration": "",
+              "track": 2}
+              ]
+            },
+            {
+              "label": "Finish",
+              "position": "21.1km",
+              "notes": "You did it!",
+              "color": "#ff0000",
+              "effects": [
+              { "start": "",
+              "duration": "",
+              "track": 1}
+              ]
+            }
+          ]
+        }`;
+      
+      appData = updateDataFormat(JSON.parse(s));
+      console.log('appData', appData);
+      save(); // To save an updated format.
     };
 
     const margin = { top: 50, right: 50, bottom: 35, left: 30 };
@@ -153,16 +267,21 @@
       return `${dd(Math.floor(m / 60))}:${dd(m % 60)}`;
     }
 
-    function markers() {
-      return appData.points.map((s) => {
-        d = { ...s };
-        const e = parseDistanceOrTime(d.position);
-        d.distance = e.distance;
-        d.time = e.time;
-        d.rangeStart = parseDistanceOrTime(d.start);
-        d.rangeDuration = parseDistanceOrTime(d.duration);
-        return d;
-      })
+    function markers() {      
+      return appData.points.flatMap((point) => {
+        const at = parseDistanceOrTime(point.position);
+        const results = point.effects.map(e => ({
+            'label': point.label,
+            'color': point.color,
+            'notes': point.notes,
+            'distance': at.distance,
+            'time': at.time,
+            'rangeStart': parseDistanceOrTime(e.start),
+            'rangeDuration': parseDistanceOrTime(e.duration),
+            'track': e.track
+          }));
+        return results;
+      });
     }
 
     function render() {
@@ -303,12 +422,10 @@
         { label: "", classes: "", sort: true },
         { label: "", classes: "" },
         { label: "Color", classes: "" },
-        { label: "Track", classes: "" },
         { label: "Label", classes: "" },
         { label: "Position", classes: "" },
-        { label: "Offset", classes: "" },
-        { label: "Duration", classes: "" },
         { label: "Notes", classes: "" },
+        { label: "Effects", classes: "" },
       ].forEach((header) => {
         const th = document.createElement("th");
         th.textContent = header.label;
@@ -363,6 +480,78 @@
         row.appendChild(td);
       };
 
+      const createEffectsTable = (point, showHeader = false) => {
+        const effectsTable = document.createElement("table");
+        effectsTable.className = "table-auto border-collapse";
+        if (showHeader) {
+          // Effects header
+          const effectsHeader = document.createElement("thead");
+          const effectsHeaderRow = document.createElement("tr");
+          ["Track", "Offset", "Duration", ""].forEach(label => {
+            const th = document.createElement("th");
+            th.textContent = label;
+            th.className = "text-sm font-normal";
+            effectsHeaderRow.appendChild(th);
+          });
+          effectsHeader.appendChild(effectsHeaderRow);
+          effectsTable.appendChild(effectsHeader);
+        }
+        // Effects body
+        const effectsBody = document.createElement("tbody");
+        point.effects.forEach((effect, effectIdx) => {
+          const effectRow = document.createElement("tr");
+          // Track input
+          addCellInput(effectRow, effect.track, (v) => {
+            effect.track = _.clamp(parseInt(v), 0, 4);
+          }, "number", "w-11 border p-1");
+          // Offset input
+          addCellInput(effectRow, effect.start, (v) => {
+            effect.start = v;
+          }, "text", "border p-1 w-20");
+          // Duration input
+          addCellInput(effectRow, effect.duration, (v) => {
+            effect.duration = v;
+          }, "text", "border p-1 w-20");
+
+          // Action cell (delete and add)
+          const actionCell = document.createElement("td");
+          // Add effect button (only for the first effect)
+          if (effectIdx === 0) {
+            const addBtn = document.createElement("button");
+            addBtn.innerHTML = `<svg class=\"w-[16px] h-[16px] text-gray-800 dark:text-white\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"none\" viewBox=\"0 0 24 24\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 12h14m-7 7V5\"/></svg>`;
+            addBtn.title = "Add new effect";
+            addBtn.className = "p-1";
+            addBtn.addEventListener("click", () => {
+              point.effects.push({
+                start: "",
+                duration: "",
+                track: 0
+              });
+              onDataUpdated();
+              updateControls();
+            });
+            actionCell.appendChild(addBtn);
+          }
+          // Delete effect button (not for the first effect)
+          if (effectIdx !== 0) {
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerHTML = `<svg class=\"w-[16px] h-[16px] text-gray-800 dark:text-white\" aria-hidden=\"true\" xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" fill=\"none\" viewBox=\"0 0 24 24\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1Z\"/></svg>`;
+            deleteBtn.title = "Delete effect";
+            deleteBtn.className = "p-1";
+            deleteBtn.addEventListener("click", () => {
+              point.effects.splice(effectIdx, 1);
+              onDataUpdated();
+              updateControls();
+            });
+            actionCell.appendChild(deleteBtn);
+          }
+          effectRow.appendChild(actionCell);
+          effectsBody.appendChild(effectRow);
+        });
+        effectsTable.appendChild(effectsBody);
+        return effectsTable;
+      };
+
       appData.points.forEach((d, i) => {
         const row = document.createElement("tr");
 
@@ -382,12 +571,15 @@
           updateControls();
         });
         addCellInput(row, d.color, (v) => (d.color = v), "color", "w-6 h-6");
-        addCellInput(row, d.track, (v) => (d.track = _.clamp(parseInt(v), 0, 4)), "number", "w-11 border p-1");
         addCellInput(row, d.label, (v) => (d.label = v), "text", "border p-1");
         addCellInput(row, d.position, (v) => (d.position = v), "text", "border p-1 w-20");
-        addCellInput(row, d.start, (v) => (d.start = v), "text", "border p-1 w-20");
-        addCellInput(row, d.duration, (v) => (d.duration = v), "text", "border p-1 w-20");
         addCellTextArea(row, d.notes, (v) => (d.notes = v), "border w-72");
+
+        // Add effects table cell
+        const effectsCell = document.createElement("td");
+        effectsCell.appendChild(createEffectsTable(d, i === 0));
+        row.appendChild(effectsCell);
+
         tbody.appendChild(row);
       });
 
@@ -420,6 +612,7 @@
     };
 
     function parseDistance(input) {
+      console.log(input);
       input = input.toString().trim();
       if (input === "") return 0;
       const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|k|mi)$/; // Matches distances like "12km", "5mi"
@@ -478,6 +671,7 @@
     }
 
     function parseDistanceOrTime(input) {
+      console.log(input);
       input = input.trim();
       if (input === "") {
         return { time: 0, distance: 0 };
@@ -506,11 +700,7 @@
     }
 
     function sortPoints() {
-      appData.points.sort((a, b) => {
-        if (a.track != b.track) return a.track - b.track;
-        return parseDistanceOrTime(a.position).distance - parseDistanceOrTime(b.position).distance;
-      }
-      );
+      appData.points.sort((a, b) => parseDistanceOrTime(a.position).distance - parseDistanceOrTime(b.position).distance);
       save();
       updateControls();
     }
@@ -521,9 +711,11 @@
         "position": "0:00",
         "label": `#${appData.points.length + 1}`,
         "notes": "",
-        "start": "",
-        "duration": "",
-        "track": 0
+        "effects": [{
+          "start": "",
+          "duration": "",
+          "track": 0
+        }]
       });
       onDataUpdated();
       updateControls();
@@ -556,7 +748,8 @@
     document.getElementById("import-json").addEventListener("click", () => {
       const s = prompt("insert one-line JSON");
       if (s == null) return;
-      appData = JSON.parse(s);
+      appData = updateDataFormat(JSON.parse(s));
+      console.log('loaded data', appData);
       onDataUpdated();
       updateControls();
     });
