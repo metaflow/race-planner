@@ -600,22 +600,20 @@
       const val = parseFloat(value);
       switch (unit) {
         case "m":
-          return val; // meters
-        case "km":
-        case "k":
-          return val * 1000; // kilometers to meters
+          return val; // meters        
         case "mi":
           return val * 1609.34; // miles to meters
+        case "km":
+        case "k":       
         default:
-          return 0;
+          return val * 1000; // kilometers to meters          
       }
     };
 
     function parseDistance(input) {
-      console.log(input);
       input = input.toString().trim();
       if (input === "") return 0;
-      const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|k|mi)$/; // Matches distances like "12km", "5mi"
+      const distanceRegex = /^([+-]?\d*\.?\d*) *(m|km|k|mi|)$/; // Matches distances like "12km", "5mi"
       let match = input.match(distanceRegex);
       if (match) {
         const value = match[1];
@@ -671,7 +669,6 @@
     }
 
     function parseDistanceOrTime(input) {
-      console.log(input);
       input = input.trim();
       if (input === "") {
         return { time: 0, distance: 0 };
